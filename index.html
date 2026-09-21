@@ -180,6 +180,17 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .paystate.is-paid{color:var(--green)}
 .paystate.is-owed{color:var(--red)}
 .ret{margin:14px 0 0 54px;font-size:14px;color:var(--ink-2)}
+.photos{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.thumb{position:relative;width:64px;height:64px;padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel-2);cursor:pointer;flex:none}
+.thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.thumb span{position:absolute;left:0;right:0;bottom:0;padding:2px 3px;background:rgba(0,0,0,.65);color:#fff;font-size:10px;line-height:1.2;text-align:center}
+.cam{display:inline-flex;align-items:center;gap:8px}
+.cam svg{width:20px;height:20px;flex:none}
+.nophoto{margin-top:10px;font-size:14px;font-weight:600;color:var(--amber)}
+.photo-dlg{width:min(760px,calc(100% - 32px));max-height:calc(100% - 32px);padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink)}
+.photo-dlg::backdrop{background:rgba(0,0,0,.75)}
+.photo-dlg img{display:block;width:100%;min-height:120px;max-height:70vh;object-fit:contain;border-radius:8px;background:#000}
+.photo-dlg p{margin-top:10px;font-size:14px;color:var(--ink-2)}
 input[type=text],input[type=tel],input[type=email],input[type=password],input[type=number],input[type=time],input[type=date],select{color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:10px;min-height:44px;padding:0 12px;width:100%}
 
 /* Payments */
@@ -473,6 +484,7 @@ input[type=text],input[type=tel],input[type=email],input[type=password],input[ty
       <label>Make checks payable to<input id="s-payee" type="text" autocomplete="off"></label>
       <label>Processing and disposal cost per tire ($, placeholder)<input id="s-ctire" type="number" min="0" step="0.05" inputmode="decimal"></label>
       <label>Truck cost per mile ($, placeholder)<input id="s-cmile" type="number" min="0" step="0.05" inputmode="decimal"></label>
+      <label class="check wide"><input id="s-reqphoto" type="checkbox"> Require a photo to confirm each pickup</label>
       <fieldset class="alerts wide">
         <legend>Email alerts</legend>
         <label class="check"><input id="s-ealerts" type="checkbox"> Email me when a customer requests a pickup</label>
@@ -490,6 +502,13 @@ input[type=text],input[type=tel],input[type=email],input[type=password],input[ty
     </div>
   </details>
 </main>
+
+<dialog class="photo-dlg" id="photo-dlg" aria-labelledby="pd-cap">
+  <img id="pd-img" alt="Pickup photo">
+  <p id="pd-cap"></p>
+  <div class="acts"><button class="btn" type="button" data-act="photo-close">Close</button><button class="btn quiet" type="button" data-act="photo-del" data-arm="photodel">Delete photo</button></div>
+</dialog>
+<input type="file" id="cam" accept="image/*" capture="environment" hidden>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -594,9 +613,9 @@ function toast(msg){
 /* ---------- data ---------- */
 function defaultSettings(){
   return {id:1, form_url:'', depot_address:'', capacity:450, return_miles:0, price_car:3, price_suv:4, price_truck:15,
-    zelle:'', payee:'Apex Material Recovery LLC', cost_tire:1, cost_mile:1.1, notify_email:'', email_alerts:false, dashboard_url:''};
+    zelle:'', payee:'Apex Material Recovery LLC', cost_tire:1, cost_mile:1.1, notify_email:'', email_alerts:false, dashboard_url:'', require_photo:true};
 }
-function emptyData(){ return {settings:defaultSettings(), stops:[], requests:[], locations:[], days:[], notifications:[]}; }
+function emptyData(){ return {settings:defaultSettings(), stops:[], requests:[], locations:[], days:[], notifications:[], stop_photos:[]}; }
 function newStop(o){
   return Object.assign({id:uuid(), created_at:new Date().toISOString(), location_id:null, name:'', address:'', phone:'', notes:'',
     arrival:null, leg:8, car:0, suv:0, truck:0, status:'scheduled', pay:'card', paid:false, paid_at:null, deposited:false,
@@ -623,7 +642,7 @@ function receivables(){
 async function fetchAll(){
   var r = await Promise.all([
     sb.from('settings').select('*').eq('id', 1).maybeSingle(),
-    sb.from('stops').select('*').or('closeout_id.is.null,paid.is.false,and(deposited.is.false,pay.in.(cash,check))'),
+    sb.from('stops').select('*, stop_photos(id,stop_id,path,taken_at,created_at)').or('closeout_id.is.null,paid.is.false,and(deposited.is.false,pay.in.(cash,check))'),
     sb.from('requests').select('*').order('created_at', {ascending:false}),
     sb.from('locations').select('*').order('name'),
     sb.from('daily_log').select('*').order('day', {ascending:false}).limit(62),
@@ -631,7 +650,9 @@ async function fetchAll(){
       .order('created_at', {ascending:false}).limit(50)
   ]);
   for (var i = 0; i < r.length; i++) if (r[i].error) throw r[i].error;
-  return {settings:r[0].data || defaultSettings(), stops:r[1].data, requests:r[2].data, locations:r[3].data, days:r[4].data, notifications:r[5].data};
+  var photos = [];
+  r[1].data.forEach(function(s){ (s.stop_photos || []).forEach(function(p){ photos.push(p); }); delete s.stop_photos; });
+  return {settings:r[0].data || defaultSettings(), stops:r[1].data, requests:r[2].data, locations:r[3].data, days:r[4].data, notifications:r[5].data, stop_photos:photos};
 }
 
 /* ---------- saving: every change is applied here first, then sent ---------- */
@@ -697,6 +718,7 @@ async function flush(){
   flushing = false;
   renderSync();
   if (rejected) refresh();
+  if (!queue.length) uploadPhotos();
 }
 
 var refreshing = false, refreshAgain = false, loadedOnce = false;
@@ -719,6 +741,7 @@ async function refresh(){
     if (loadedOnce && fresh.length) announce(fresh);
     if (!loadedOnce) rememberDashboardUrl();
     loadedOnce = true;
+    uploadPhotos();
   } catch (e) {
     net = false; renderSync();
   } finally {
@@ -874,7 +897,7 @@ function renderRoute(t){
     var a = amountOf(s), c = tireCount(s), nm = esc(s.name);
     var statusLabel = s.status === 'done' ? 'Picked up' : s.status === 'active' ? 'At the stop, loading' : 'Scheduled';
     html += '<li class="stop is-' + s.status + '"><div class="marker">' + (s.status === 'done' ? CHECK_SVG : (i + 1)) + '</div><div class="stop-body">';
-    html += '<div class="stop-head"><div><h3>' + nm + '</h3><p class="meta">' + esc(s.address || 'Address to confirm') + (s.phone ? ', ' + esc(s.phone) : '') + '</p></div><div class="amt">' + money(a) + '<small>' + num(c) + ' tires</small></div></div>';
+    html += '<div class="stop-head"><div><h3>' + nm + '</h3><p class="meta">' + esc(s.address || 'Address to confirm') + (s.phone ? ', ' + esc(s.phone) : '') + '</p></div><div class="amt">' + money(a) + '<small>' + num(c) + (c === 1 ? ' tire' : ' tires') + '</small></div></div>';
     html += '<div class="mix">' + mixChips(s) + '</div>';
     if (s.notes) html += '<p class="note">' + esc(s.notes) + '</p>';
     if (s.status === 'scheduled'){
@@ -886,8 +909,11 @@ function renderRoute(t){
       html += '<div class="stop-line"><span class="status s-' + s.status + '">' + statusLabel + '</span><span>' + fmtTime(s.arrival) + '</span><span>' + num(s.leg) + ' mi from previous stop</span></div>';
     }
     if (s.status === 'active'){
+      var needPhoto = state.settings.require_photo && !hasPhoto(s.id);
       html += '<div class="counts">' + TYPES.map(function(ty){ return stepper(s, ty); }).join('') + '</div>';
-      html += '<div class="acts"><button class="btn primary" type="button" data-act="confirm" data-id="' + s.id + '" aria-label="Confirm pickup at ' + nm + '">Confirm pickup</button>' +
+      if (!needPhoto) html += photosHTML(s);
+      html += '<div class="acts"><button class="btn primary' + (needPhoto ? ' cam' : '') + '" type="button" data-act="confirm" data-id="' + s.id + '" aria-label="' + (needPhoto ? 'Take a photo and confirm pickup at ' : 'Confirm pickup at ') + nm + '">' +
+        (needPhoto ? CAMERA_SVG + 'Take photo &amp; confirm' : 'Confirm pickup') + '</button>' +
         '<button class="btn quiet" type="button" data-act="unstart" data-id="' + s.id + '">Back to scheduled</button>' + contactActs(s) + '</div>';
     }
     if (s.status === 'done'){
@@ -896,6 +922,8 @@ function renderRoute(t){
         '<span class="paystate ' + (s.paid ? 'is-paid' : 'is-owed') + '">' + (s.paid ? 'Paid ' + money(a) : 'Owed ' + money(a)) + '</span>' +
         '<button class="btn ' + (s.paid ? 'quiet' : 'primary') + '" type="button" data-act="paid" data-id="' + s.id + '" aria-label="' + (s.paid ? 'Undo payment for ' : 'Mark paid for ') + nm + '">' + (s.paid ? 'Undo payment' : 'Mark paid') + '</button>' +
         '<button class="btn quiet" type="button" data-act="reopen" data-id="' + s.id + '" aria-label="Edit the count at ' + nm + '">Edit count</button></div>';
+      if (!hasPhoto(s.id)) html += '<p class="nophoto">No pickup photo yet.</p>';
+      html += photosHTML(s);
     }
     html += '</div></li>';
   });
@@ -1092,15 +1120,16 @@ function csvCell(v){
 }
 async function exportCsv(btn){
   btn.disabled = true;
-  var r = await sb.from('stops').select('closed_on,name,address,phone,car,suv,truck,amount,pay,paid,paid_at,deposited,notes')
+  var r = await sb.from('stops').select('closed_on,name,address,phone,car,suv,truck,amount,pay,paid,paid_at,deposited,notes,stop_photos(count)')
     .not('closeout_id', 'is', null).order('closed_on').order('created_at');
   btn.disabled = false;
   if (r.error){ toast('Could not download the log: ' + errText(r.error)); return; }
   if (!r.data.length){ toast('Nothing is closed out yet.'); return; }
-  var rows = [['Date', 'Customer', 'Address', 'Phone', 'Car tires', 'SUV tires', 'Truck tires', 'Total tires', 'Amount', 'Pays by', 'Paid', 'Paid on', 'Deposited', 'Notes']];
+  var rows = [['Date', 'Customer', 'Address', 'Phone', 'Car tires', 'SUV tires', 'Truck tires', 'Total tires', 'Amount', 'Pays by', 'Paid', 'Paid on', 'Deposited', 'Pickup photos', 'Notes']];
   r.data.forEach(function(s){
+    var photos = s.stop_photos && s.stop_photos[0] ? s.stop_photos[0].count : 0;
     rows.push([s.closed_on, s.name, s.address, s.phone, s.car, s.suv, s.truck, tireCount(s), (+s.amount).toFixed(2), methodLabel(s.pay),
-      s.paid ? 'yes' : 'no', s.paid_at ? iso(new Date(s.paid_at)) : '', s.deposited ? 'yes' : 'no', s.notes]);
+      s.paid ? 'yes' : 'no', s.paid_at ? iso(new Date(s.paid_at)) : '', s.deposited ? 'yes' : 'no', photos, s.notes]);
   });
   var csv = rows.map(function(row){ return row.map(csvCell).join(','); }).join('\r\n');
   var a = document.createElement('a');
@@ -1153,13 +1182,246 @@ function printSign(){
 }
 window.addEventListener('afterprint', function(){ document.body.classList.remove('print-sign'); });
 
+/* ---------- pickup photos ---------- */
+// Photos are resized and stamped on the phone, kept in IndexedDB until they
+// upload, then stored in the private "pickup-photos" bucket with a row in
+// stop_photos. Each photo also gets a small _t.jpg thumbnail.
+var BUCKET = 'pickup-photos';
+var CAMERA_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h3.6l1.7-2.4h6.4L16.9 8h3.6v11h-17z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13.3" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+var localPhotos = [];      // taken here, not uploaded yet: {id, stop_id, owner, taken_at, full, thumb, url}
+var sessionThumbs = {};    // thumbnail path -> local blob URL, for photos uploaded this session
+var thumbUrls = lsGet('apex-thumb-urls') || {};   // thumbnail path -> {url, exp}
+var camFor = null, viewing = null;
+
+function thumbPath(path){ return path.replace(/\.jpg$/, '_t.jpg'); }
+function fmtStamp(ts){ return new Date(ts).toLocaleString('en-US', {month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'}); }
+function hasPhoto(id){
+  return state.stop_photos.some(function(p){ return p.stop_id === id; }) || localPhotos.some(function(p){ return p.stop_id === id; });
+}
+function thumbSrc(t){
+  if (sessionThumbs[t]) return sessionThumbs[t];
+  var c = thumbUrls[t];
+  return c && c.exp > Date.now() ? c.url : '';
+}
+function photosHTML(s){
+  var html = '<div class="photos">';
+  state.stop_photos.filter(function(p){ return p.stop_id === s.id; })
+    .sort(function(a, b){ return a.taken_at < b.taken_at ? -1 : 1; })
+    .forEach(function(p){
+      var t = thumbPath(p.path), src = thumbSrc(t);
+      html += '<button type="button" class="thumb" data-act="photo-view" data-id="' + p.id + '" aria-label="View pickup photo from ' + esc(fmtStamp(p.taken_at)) + '">' +
+        '<img alt="" data-path="' + esc(t) + '"' + (src ? ' src="' + esc(src) + '"' : '') + '></button>';
+    });
+  localPhotos.filter(function(p){ return p.stop_id === s.id; }).forEach(function(p){
+    html += '<button type="button" class="thumb" data-act="photo-view" data-local="' + p.id + '" aria-label="View pickup photo, not uploaded yet"><img alt="" src="' + p.url + '"><span>Not uploaded</span></button>';
+  });
+  return html + '<button class="btn quiet cam" type="button" data-act="photo-add" data-id="' + s.id + '" aria-label="Take a pickup photo at ' + esc(s.name) + '">' +
+    CAMERA_SVG + (hasPhoto(s.id) ? 'Add photo' : 'Take photo') + '</button></div>';
+}
+var hydrating = false;
+async function hydrateThumbs(){
+  var paths = [];
+  document.querySelectorAll('img[data-path]:not([src])').forEach(function(im){
+    var p = im.getAttribute('data-path');
+    if (paths.indexOf(p) < 0) paths.push(p);
+  });
+  if (hydrating || !paths.length || !net) return;
+  hydrating = true;
+  try {
+    var r = await sb.storage.from(BUCKET).createSignedUrls(paths, 7 * 86400);
+    if (!r.error) r.data.forEach(function(d){ if (d.signedUrl) thumbUrls[d.path] = {url:d.signedUrl, exp:Date.now() + 6 * 86400e3}; });
+    Object.keys(thumbUrls).forEach(function(k){ if (thumbUrls[k].exp < Date.now()) delete thumbUrls[k]; });
+    lsSet('apex-thumb-urls', thumbUrls);
+    document.querySelectorAll('img[data-path]:not([src])').forEach(function(im){
+      var src = thumbSrc(im.getAttribute('data-path'));
+      if (src) im.src = src;
+    });
+  } catch (e) {} finally { hydrating = false; }
+}
+
+// Pending photos survive reloads in IndexedDB (too big for localStorage).
+var idbP = null;
+function idb(mode, fn){
+  idbP = idbP || new Promise(function(res, rej){
+    var q = indexedDB.open('apex-photos', 1);
+    q.onupgradeneeded = function(){ q.result.createObjectStore('pending', {keyPath:'id'}); };
+    q.onsuccess = function(){ res(q.result); };
+    q.onerror = function(){ rej(q.error); };
+  });
+  return idbP.then(function(db){
+    return new Promise(function(res, rej){
+      var tx = db.transaction('pending', mode), q = fn(tx.objectStore('pending'));
+      tx.oncomplete = function(){ res(q && q.result); };
+      tx.onerror = function(){ rej(tx.error); };
+    });
+  });
+}
+function idbPut(rec){ return idb('readwrite', function(st){ return st.put(rec); }).catch(function(){}); }
+function idbDel(id){ return idb('readwrite', function(st){ return st.delete(id); }).catch(function(){}); }
+async function loadLocalPhotos(){
+  var rows = [];
+  try { rows = await idb('readonly', function(st){ return st.getAll(); }) || []; } catch (e) {}
+  localPhotos.forEach(function(p){ URL.revokeObjectURL(p.url); });
+  localPhotos = rows.filter(function(r){ return r.owner === me.id; })
+    .sort(function(a, b){ return a.taken_at < b.taken_at ? -1 : 1; })
+    .map(function(r){ r.url = URL.createObjectURL(r.thumb); return r; });
+}
+
+function loadImage(file){
+  function viaImg(){
+    return new Promise(function(res, rej){
+      var u = URL.createObjectURL(file), im = new Image();
+      im.onload = function(){ URL.revokeObjectURL(u); res(im); };
+      im.onerror = function(){ URL.revokeObjectURL(u); rej(new Error('Could not read the photo')); };
+      im.src = u;
+    });
+  }
+  return window.createImageBitmap ? createImageBitmap(file, {imageOrientation:'from-image'}).catch(viaImg) : viaImg();
+}
+function stampLines(s){
+  var mix = TYPES.filter(function(t){ return +s[t.k] > 0; }).map(function(t){ return num(s[t.k]) + ' ' + t.label.toLowerCase(); }).join(', ');
+  return ['Apex Material Recovery, ' + s.name, fmtStamp(new Date()) + (mix ? ', ' + mix : '')];
+}
+// Resizes to fit `max` pixels and, for the full photo, burns in a proof stamp.
+function toJpeg(src, max, quality, lines){
+  var k = Math.min(1, max / Math.max(src.width, src.height));
+  var c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(src.width * k)); c.height = Math.max(1, Math.round(src.height * k));
+  var g = c.getContext('2d');
+  g.drawImage(src, 0, 0, c.width, c.height);
+  if (lines){
+    var fs = Math.max(14, Math.round(Math.min(c.width, c.height) * 0.035)), pad = Math.round(fs * 0.6), lh = Math.round(fs * 1.3);
+    var bh = lines.length * lh + pad * 2;
+    g.fillStyle = 'rgba(0,0,0,0.62)';
+    g.fillRect(0, c.height - bh, c.width, bh);
+    g.fillStyle = '#fff'; g.textBaseline = 'top';
+    g.font = '600 ' + fs + 'px system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+    lines.forEach(function(t, i){ g.fillText(t, pad, c.height - bh + pad + i * lh, c.width - pad * 2); });
+  }
+  return new Promise(function(res, rej){
+    c.toBlob(function(b){ if (b) res(b); else rej(new Error('Could not save the photo')); }, 'image/jpeg', quality);
+  });
+}
+function openCamera(stopId, confirm){
+  camFor = {id:stopId, confirm:!!confirm};
+  var inp = $('cam');
+  inp.value = '';
+  inp.click();
+}
+async function addPhoto(s, file){
+  var src = await loadImage(file);
+  var full = await toJpeg(src, 1600, 0.72, stampLines(s)), thumb = await toJpeg(src, 320, 0.6, null);
+  if (src.close) src.close();
+  var p = {id:uuid(), stop_id:s.id, owner:me.id, taken_at:new Date().toISOString(), full:full, thumb:thumb};
+  await idbPut(p);
+  p.url = URL.createObjectURL(thumb);
+  localPhotos.push(p);
+}
+async function onCameraPick(){
+  var f = this.files && this.files[0], target = camFor;
+  camFor = null;
+  if (!f || !target || !startedFor) return;
+  var s = findIn(state.stops, target.id);
+  if (!s) return;
+  toast('Saving photo…');
+  try { await addPhoto(s, f); } catch (e) { toast('Could not read that photo. Try again.'); return; }
+  if (target.confirm && s.status !== 'done'){
+    change({t:'stops', k:'upd', id:s.id, v:{status:'done'}});
+    toast('Pickup confirmed with a photo');
+  } else {
+    renderAll(true);
+    toast('Photo saved');
+  }
+  uploadPhotos();
+}
+
+var uploadingPhotos = false, photoRetry = null;
+async function uploadPhotos(){
+  // Wait for queued changes first so the stop exists on the server.
+  if (uploadingPhotos || !startedFor || !loadedOnce || queue.length || !localPhotos.length) return;
+  uploadingPhotos = true;
+  clearTimeout(photoRetry);
+  renderSync();
+  var retry = false;
+  try {
+    while (localPhotos.length && startedFor){
+      var p = localPhotos[0], path = p.stop_id + '/' + p.id + '.jpg', bucket = sb.storage.from(BUCKET), res;
+      res = await bucket.upload(path, p.full, {contentType:'image/jpeg', upsert:true});
+      if (!res.error) res = await bucket.upload(thumbPath(path), p.thumb, {contentType:'image/jpeg', upsert:true});
+      if (!res.error) res = await sb.from('stop_photos').upsert({id:p.id, stop_id:p.stop_id, path:path, taken_at:p.taken_at}, {onConflict:'id', ignoreDuplicates:true});
+      if (localPhotos.indexOf(p) < 0){ bucket.remove([path, thumbPath(path)]); continue; }   // deleted meanwhile
+      if (res.error && res.error.code === '23503'){                                            // its stop is gone
+        localPhotos.shift(); idbDel(p.id); bucket.remove([path, thumbPath(path)]);
+        continue;
+      }
+      if (res.error){ retry = true; if (!navigator.onLine) net = false; break; }
+      var row = {id:p.id, stop_id:p.stop_id, path:path, taken_at:p.taken_at, created_at:new Date().toISOString()};
+      if (!findIn(server.stop_photos, p.id)){ server.stop_photos.push(row); state.stop_photos.push(Object.assign({}, row)); }
+      sessionThumbs[thumbPath(path)] = p.url;
+      localPhotos.shift();
+      idbDel(p.id);
+      net = true;
+    }
+  } catch (e) {
+    retry = true;
+  } finally {
+    uploadingPhotos = false;
+    if (retry) photoRetry = setTimeout(uploadPhotos, 20000);
+    renderAll(false);
+  }
+}
+
+async function openPhoto(id, localId){
+  var lp = localId ? localPhotos.filter(function(p){ return p.id === localId; })[0] : null;
+  var p = lp ? null : findIn(state.stop_photos, id), src;
+  if (!lp && !p) return;
+  var stop = findIn(state.stops, (lp || p).stop_id);
+  var cap = (stop ? stop.name + ', ' : '') + fmtStamp((lp || p).taken_at);
+  $('pd-img').removeAttribute('src');
+  $('pd-cap').textContent = cap + (lp ? '. Not uploaded yet: it uploads when you have signal.' : '. Loading…');
+  viewing = lp ? {local:lp} : {photo:p};
+  if (!$('photo-dlg').open) $('photo-dlg').showModal();
+  if (lp){
+    src = viewing.blobUrl = URL.createObjectURL(lp.full);
+  } else {
+    // Show the small copy right away, then swap in the full photo.
+    var small = thumbSrc(thumbPath(p.path));
+    if (small) $('pd-img').src = small;
+    var r = await sb.storage.from(BUCKET).createSignedUrl(p.path, 3600);
+    if (!viewing || viewing.photo !== p) return;
+    if (r.error){
+      $('pd-cap').textContent = cap + (navigator.onLine ? '. This photo could not be loaded.' : '. Photos need a connection to open.');
+      return;
+    }
+    src = r.data.signedUrl;
+    $('pd-cap').textContent = cap + '.';
+  }
+  $('pd-img').src = src;
+}
+function deletePhoto(){
+  if (!viewing) return;
+  if (viewing.local){
+    var lp = viewing.local;
+    localPhotos = localPhotos.filter(function(x){ return x !== lp; });
+    URL.revokeObjectURL(lp.url);
+    idbDel(lp.id);
+  } else {
+    var p = viewing.photo;
+    change({t:'stop_photos', k:'del', id:p.id});
+    sb.storage.from(BUCKET).remove([p.path, thumbPath(p.path)]).catch(function(){});
+  }
+  $('photo-dlg').close();
+  renderAll(true);
+  toast('Photo deleted');
+}
+
 /* ---------- setup ---------- */
 // [input id, settings column, kind]: a number is the minimum for a number field.
 var SETUP = [
   ['s-url', 'form_url'], ['s-depot', 'depot_address'], ['s-cap', 'capacity', 1], ['s-return', 'return_miles', 0],
   ['s-pcar', 'price_car', 0], ['s-psuv', 'price_suv', 0], ['s-ptruck', 'price_truck', 0],
   ['s-zelle', 'zelle'], ['s-payee', 'payee'], ['s-ctire', 'cost_tire', 0], ['s-cmile', 'cost_mile', 0],
-  ['s-ealerts', 'email_alerts', 'bool'], ['s-nemail', 'notify_email']
+  ['s-ealerts', 'email_alerts', 'bool'], ['s-nemail', 'notify_email'], ['s-reqphoto', 'require_photo', 'bool']
 ];
 function fillSetup(){
   var s = state.settings;
@@ -1308,14 +1570,17 @@ function renderAll(force){
   if (!$('setup').contains(document.activeElement)) fillSetup();
   reArm();
   renderSync();
+  hydrateThumbs();
 }
 document.addEventListener('focusout', function(){
   setTimeout(function(){ if (pendingRender && !editing()) renderAll(true); }, 0);
 });
 function renderSync(){
-  var el = $('sync'), n = queue.length, cls = '', txt = 'Synced';
-  if (!net) { cls = 'offline'; txt = n ? 'Offline, ' + n + (n === 1 ? ' change' : ' changes') + ' waiting' : 'Offline, showing your last copy'; }
+  var el = $('sync'), n = queue.length, ph = localPhotos.length, cls = '', txt = 'Synced';
+  var waiting = [n ? n + (n === 1 ? ' change' : ' changes') : '', ph ? ph + (ph === 1 ? ' photo' : ' photos') : ''].filter(Boolean).join(' and ');
+  if (!net) { cls = 'offline'; txt = waiting ? 'Offline, ' + waiting + ' waiting' : 'Offline, showing your last copy'; }
   else if (n) { cls = 'saving'; txt = 'Saving'; }
+  else if (ph) { cls = 'saving'; txt = uploadingPhotos ? 'Uploading ' + waiting : waiting + ' waiting to upload'; }
   el.className = 'sync ' + cls;
   el.innerHTML = '<i aria-hidden="true"></i>' + esc(txt);
 }
@@ -1351,7 +1616,7 @@ function reArm(){
 async function closeDay(){
   var route = routeStops(), done = route.filter(function(s){ return s.status === 'done'; });
   if (!done.length || busy) return;
-  if (queue.length){ toast('Some changes are still saving. Close out once they are saved.'); return; }
+  if (queue.length || localPhotos.length){ toast('Some changes or photos are still saving. Close out once they are saved.'); return; }
   var t = totals(), miles = t.driven + (done.length === route.length ? (+state.settings.return_miles || 0) : 0);
   busy = true;
   var r = await sb.rpc('close_out_day', {p_day:isoPlus(0), p_miles:miles});
@@ -1404,13 +1669,15 @@ function addLocationToRoute(id){
   toast(l.name + ' added to the route. Count the tires at the stop.');
 }
 async function signOut(btn){
-  if (queue.length && !twoStep('signout', btn)){
-    toast(queue.length + (queue.length === 1 ? ' change has' : ' changes have') + ' not saved yet. Tap again to sign out anyway.');
+  var unsaved = queue.length + localPhotos.length;
+  if (unsaved && !twoStep('signout', btn)){
+    toast((unsaved === 1 ? '1 change or photo has' : unsaved + ' changes or photos have') + ' not saved yet. Tap again to sign out anyway.');
     return;
   }
-  var key = qKey(), r = await sb.auth.signOut();
+  var key = qKey(), pending = localPhotos.slice(), r = await sb.auth.signOut();
   if (r.error){ toast('Could not sign out: ' + errText(r.error)); return; }
   lsSet(key, null);
+  pending.forEach(function(p){ idbDel(p.id); });
 }
 
 document.addEventListener('click', function(e){
@@ -1423,6 +1690,10 @@ document.addEventListener('click', function(e){
   if (act === 'signout'){ signOut(b); return; }
   if (act === 'csv'){ exportCsv(b); return; }
   if (act === 'print-sign'){ printSign(); return; }
+  if (act === 'photo-add'){ openCamera(id, false); return; }
+  if (act === 'photo-view'){ openPhoto(id, b.getAttribute('data-local')); return; }
+  if (act === 'photo-close'){ $('photo-dlg').close(); return; }
+  if (act === 'photo-del'){ if (twoStep('photodel', b)) deletePhoto(); return; }
   if (act === 'notif-open'){ openNotification(id); return; }
   if (act === 'notif-readall'){ markAllRead(); return; }
   if (act === 'alerts-on'){ enableDeviceAlerts(); return; }
@@ -1449,7 +1720,10 @@ document.addEventListener('click', function(e){
   if (!s) return;
   if (act === 'start') change({t:'stops', k:'upd', id:id, v:{status:'active'}});
   else if (act === 'unstart') change({t:'stops', k:'upd', id:id, v:{status:'scheduled'}});
-  else if (act === 'confirm') change({t:'stops', k:'upd', id:id, v:{status:'done'}});
+  else if (act === 'confirm'){
+    if (state.settings.require_photo && !hasPhoto(id)) openCamera(id, true);
+    else change({t:'stops', k:'upd', id:id, v:{status:'done'}});
+  }
   else if (act === 'reopen') change({t:'stops', k:'upd', id:id, v:{status:'active'}});
   else if (act === 'paid') change({t:'stops', k:'upd', id:id, v:s.paid ? {paid:false, paid_at:null, deposited:false} : {paid:true, paid_at:new Date().toISOString()}});
   else if (act === 'step') { var v = {}; v[type] = Math.max(0, (+s[type] || 0) + d); change({t:'stops', k:'upd', id:id, v:v}); }
@@ -1470,7 +1744,7 @@ window.addEventListener('message', function(e){
   if (e.data.type === 'apex-form-ready') postFormInfo();
   if (e.data.type === 'apex-request-sent') refresh();
 });
-window.addEventListener('online', function(){ flush(); refresh(); });
+window.addEventListener('online', function(){ flush(); refresh(); uploadPhotos(); });
 window.addEventListener('offline', function(){ net = false; renderSync(); });
 document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible' && startedFor){ flush(); refresh(); } });
 
@@ -1586,6 +1860,7 @@ function startApp(cache){
   subscribe();
   refresh();
   flush();
+  loadLocalPhotos().then(function(){ if (startedFor){ renderAll(false); uploadPhotos(); } });
   // Lets pop-up alerts work on phones, which only show them through a service worker.
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
     navigator.serviceWorker.register('sw.js').catch(function(){});
@@ -1599,6 +1874,10 @@ function stopApp(){
   lsSet(cKey(), null);
   queue = []; server = emptyData(); state = emptyData(); undoId = null; qrLoc = ''; lastQr = null;
   closeLocForm();
+  clearTimeout(photoRetry);
+  localPhotos.forEach(function(p){ URL.revokeObjectURL(p.url); });
+  localPhotos = []; sessionThumbs = {};
+  if ($('photo-dlg').open) $('photo-dlg').close();
   document.title = 'Apex daily pickups';
   try { if (navigator.clearAppBadge) navigator.clearAppBadge(); } catch (e) {}
 }
@@ -1634,6 +1913,15 @@ document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && !$('npanel').hidden){ setPanel(false); $('bell').focus(); }
 });
 $('form-frame').addEventListener('load', postFormInfo);
+$('cam').addEventListener('change', onCameraPick);
+$('photo-dlg').addEventListener('close', function(){
+  if (viewing && viewing.blobUrl) URL.revokeObjectURL(viewing.blobUrl);
+  viewing = null;
+  $('pd-img').removeAttribute('src');
+  var b = document.querySelector('[data-arm="photodel"]');
+  if (armed.photodel){ clearTimeout(armed.photodel); delete armed.photodel; if (b && b.getAttribute('data-label')) b.textContent = b.getAttribute('data-label'); }
+});
+$('photo-dlg').addEventListener('click', function(e){ if (e.target === this) this.close(); });
 SETUP.forEach(function(f){ $(f[0]).addEventListener('change', readSetup); });
 $('s-url').addEventListener('input', function(){ renderQR(this.value.trim()); });
 if (typeof qrcode !== 'function') loadQrFallback();
