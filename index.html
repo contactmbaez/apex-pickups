@@ -58,10 +58,31 @@ button,input,select,textarea{font:inherit}
 .brand{display:flex;align-items:center;gap:10px;padding:4px 0 20px}
 .mark{width:34px;height:31px}
 .brand-name{font:600 21px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.03em}
-.sync{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--hero-mute);text-align:right}
+.brand-tools{margin-left:auto;display:flex;align-items:center;gap:12px}
+.sync{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--hero-mute);text-align:right}
 .sync i{width:8px;height:8px;border-radius:50%;background:#5CC48A;flex:none}
 .sync.saving i{background:var(--yellow)}
 .sync.offline i{background:#FF8F7C}
+.bell{position:relative;display:grid;place-items:center;width:44px;height:44px;border-radius:10px;border:1px solid var(--hero-line);background:transparent;color:var(--hero-ink);cursor:pointer;flex:none}
+.bell svg{width:22px;height:22px}
+.bell[aria-expanded="true"]{background:var(--hero-line)}
+.badge{position:absolute;top:3px;right:3px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--yellow);color:#1E2227;font:700 12px/18px "Public Sans",system-ui,sans-serif;text-align:center}
+.hero .wrap{position:relative}
+.npanel{position:absolute;right:16px;top:62px;z-index:20;width:min(420px,calc(100% - 32px));max-height:min(72vh,580px);display:flex;flex-direction:column;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.35)}
+.np-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.np-head h2{font-size:24px;font-weight:600}
+.nlist{list-style:none;margin:0;padding:0;overflow-y:auto;flex:1 1 auto}
+.nitem button{display:grid;gap:2px;width:100%;text-align:left;padding:12px 14px 12px 30px;border:0;border-bottom:1px solid var(--line);background:transparent;color:inherit;font:inherit;cursor:pointer;position:relative}
+.nitem button:hover{background:var(--panel-2)}
+.nitem.is-unread button::before{content:"";position:absolute;left:12px;top:19px;width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.nitem b{font-weight:600}
+.nitem span,.nitem small{font-size:14px;color:var(--ink-2)}
+.nitem small{font-size:13px}
+.fail{color:var(--red)}
+.np-empty{padding:18px 14px;color:var(--ink-2)}
+.np-foot{padding:12px 14px;font-size:14px;color:var(--ink-2);display:grid;gap:8px}
+.np-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.req.flash{box-shadow:0 0 0 3px var(--yellow)}
 .hero-gate{padding:0 0 34px}
 .hero-grid{display:grid;gap:22px;align-items:center}
 @media(min-width:900px){.hero-grid{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:36px}}
@@ -268,6 +289,11 @@ input[type=text],input[type=tel],input[type=email],input[type=password],input[ty
 .setup-grid label{display:grid;gap:4px;font-size:14px;font-weight:600}
 .setup-grid small{font-weight:400;color:var(--ink-2);word-break:break-word}
 .wide{grid-column:1/-1}
+.alerts{border:1px dashed var(--line);border-radius:12px;padding:12px 14px 14px;margin:0;display:grid;gap:12px;min-width:0}
+.alerts legend{font-weight:600;font-size:14px;padding:0 6px}
+.setup-grid .check{display:flex;align-items:center;gap:10px}
+.check input{width:22px;height:22px;margin:0;accent-color:var(--blue);flex:none}
+.alerts .acts{margin-top:0}
 .account{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;font-size:15px}
 
 .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1E2227;color:#fff;border:1px solid #3A424A;padding:12px 18px;border-radius:10px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:10;max-width:calc(100% - 32px)}
@@ -291,7 +317,18 @@ input[type=text],input[type=tel],input[type=email],input[type=password],input[ty
     <div class="brand">
       <svg class="mark" viewBox="0 0 40 36" aria-hidden="true"><path d="M20 2 L38 34 H28 L20 18 L12 34 H2 Z" fill="#4C86F0"/><path d="M20 23 L25 34 H15 Z" fill="#F2F3F3"/></svg>
       <span class="brand-name">Apex Material Recovery</span>
-      <span class="sync" id="sync" hidden></span>
+      <div class="brand-tools" id="brand-tools" hidden>
+        <span class="sync" id="sync"></span>
+        <button class="bell" id="bell" type="button" aria-expanded="false" aria-controls="npanel" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16.5V11a6 6 0 1 1 12 0v5.5l1.6 2H4.4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 21a2.2 2.2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="badge" id="bell-count" hidden></span>
+        </button>
+      </div>
+    </div>
+    <div class="npanel" id="npanel" role="dialog" aria-labelledby="np-h" hidden>
+      <div class="np-head"><h2 id="np-h">Notifications</h2><button class="btn quiet" type="button" data-act="notif-readall">Mark all read</button></div>
+      <ul class="nlist" id="nlist"></ul>
+      <div class="np-foot" id="np-foot"></div>
     </div>
     <div class="hero-gate" id="hero-gate">
       <p class="date" id="gate-date"></p>
@@ -436,6 +473,16 @@ input[type=text],input[type=tel],input[type=email],input[type=password],input[ty
       <label>Make checks payable to<input id="s-payee" type="text" autocomplete="off"></label>
       <label>Processing and disposal cost per tire ($, placeholder)<input id="s-ctire" type="number" min="0" step="0.05" inputmode="decimal"></label>
       <label>Truck cost per mile ($, placeholder)<input id="s-cmile" type="number" min="0" step="0.05" inputmode="decimal"></label>
+      <fieldset class="alerts wide">
+        <legend>Email alerts</legend>
+        <label class="check"><input id="s-ealerts" type="checkbox"> Email me when a customer requests a pickup</label>
+        <label>Send alerts to
+          <input id="s-nemail" type="email" autocomplete="email" inputmode="email">
+          <small>Resend's free sender only delivers to the email on your Resend account. To send elsewhere, verify a domain in Resend.</small>
+        </label>
+        <p class="meta" id="email-state"></p>
+        <div class="acts"><button class="btn quiet" type="button" data-act="test-email">Send a test email</button></div>
+      </fieldset>
     </div>
     <div class="account">
       <span>Signed in as <b id="acct-email"></b></span>
@@ -547,9 +594,9 @@ function toast(msg){
 /* ---------- data ---------- */
 function defaultSettings(){
   return {id:1, form_url:'', depot_address:'', capacity:450, return_miles:0, price_car:3, price_suv:4, price_truck:15,
-    zelle:'', payee:'Apex Material Recovery LLC', cost_tire:1, cost_mile:1.1};
+    zelle:'', payee:'Apex Material Recovery LLC', cost_tire:1, cost_mile:1.1, notify_email:'', email_alerts:false, dashboard_url:''};
 }
-function emptyData(){ return {settings:defaultSettings(), stops:[], requests:[], locations:[], days:[]}; }
+function emptyData(){ return {settings:defaultSettings(), stops:[], requests:[], locations:[], days:[], notifications:[]}; }
 function newStop(o){
   return Object.assign({id:uuid(), created_at:new Date().toISOString(), location_id:null, name:'', address:'', phone:'', notes:'',
     arrival:null, leg:8, car:0, suv:0, truck:0, status:'scheduled', pay:'card', paid:false, paid_at:null, deposited:false,
@@ -579,10 +626,12 @@ async function fetchAll(){
     sb.from('stops').select('*').or('closeout_id.is.null,paid.is.false,and(deposited.is.false,pay.in.(cash,check))'),
     sb.from('requests').select('*').order('created_at', {ascending:false}),
     sb.from('locations').select('*').order('name'),
-    sb.from('daily_log').select('*').order('day', {ascending:false}).limit(62)
+    sb.from('daily_log').select('*').order('day', {ascending:false}).limit(62),
+    sb.from('notifications').select('id,created_at,kind,title,body,request_id,read_at,email_status,email_error,emailed_at')
+      .order('created_at', {ascending:false}).limit(50)
   ]);
   for (var i = 0; i < r.length; i++) if (r[i].error) throw r[i].error;
-  return {settings:r[0].data || defaultSettings(), stops:r[1].data, requests:r[2].data, locations:r[3].data, days:r[4].data};
+  return {settings:r[0].data || defaultSettings(), stops:r[1].data, requests:r[2].data, locations:r[3].data, days:r[4].data, notifications:r[5].data};
 }
 
 /* ---------- saving: every change is applied here first, then sent ---------- */
@@ -606,8 +655,7 @@ function changeMany(ops){
     else queue.push(clone(op));
   });
   saveQueue();
-  undoId = null;
-  disarmAll();
+  if (ops.some(function(op){ return op.t !== 'notifications'; })){ undoId = null; disarmAll(); }
   renderAll(true);
   flush();
 }
@@ -661,14 +709,15 @@ async function refresh(){
     do { seq = writeSeq; data = await fetchAll(); } while (seq !== writeSeq && ++tries < 3);
     if (!startedFor) return;
     var seen = {};
-    server.requests.forEach(function(r){ seen[r.id] = true; });
-    var fresh = data.requests.filter(function(r){ return !seen[r.id]; });
+    (server.notifications || []).forEach(function(n){ seen[n.id] = true; });
+    var fresh = (data.notifications || []).filter(function(n){ return !seen[n.id] && !n.read_at && n.kind !== 'test'; });
     server = data;
     lsSet(cKey(), {data:data, owner:true});
     state = replay(server);
     net = true;
     renderAll(false);
-    if (loadedOnce && fresh.length) toast(fresh.length === 1 ? 'New pickup request from ' + fresh[0].name : fresh.length + ' new pickup requests');
+    if (loadedOnce && fresh.length) announce(fresh);
+    if (!loadedOnce) rememberDashboardUrl();
     loadedOnce = true;
   } catch (e) {
     net = false; renderSync();
@@ -915,7 +964,7 @@ function renderReq(t){
     if (r.queued && !fits) fit = '<p class="fit bad">Saved for the next run. It is ' + num(Math.ceil(sp - free)) + ' spaces too big for today.</p>';
     else if (fits) fit = '<p class="fit ok">Fits today and leaves ' + num(free - sp) + ' spaces open.</p>';
     else fit = '<p class="fit bad">Too big for today by ' + num(Math.ceil(sp - free)) + ' spaces.</p>';
-    html += '<li class="req"><div class="req-top"><div><h3>' + nm + '</h3><p class="meta">' + esc(r.address || 'Address to confirm') + (r.phone ? ', <a href="' + esc(telHref(r.phone)) + '">' + esc(r.phone) + '</a>' : '') + '</p></div><span class="chip">' + ICON[r.pay] + methodLabel(r.pay) + '</span></div>' +
+    html += '<li class="req' + (r.id === flashReqId ? ' flash' : '') + '" id="req-' + r.id + '"><div class="req-top"><div><h3>' + nm + '</h3><p class="meta">' + esc(r.address || 'Address to confirm') + (r.phone ? ', <a href="' + esc(telHref(r.phone)) + '">' + esc(r.phone) + '</a>' : '') + '</p></div><span class="chip">' + ICON[r.pay] + methodLabel(r.pay) + '</span></div>' +
       '<div class="mix">' + mixChips(r) + '</div>' +
       (r.notes ? '<p class="note">' + esc(r.notes) + '</p>' : '') +
       '<p class="meta" style="margin-top:8px">Sent ' + esc(ago(r.created_at)) + '. Wants pickup ' + esc(fmtDate(r.pickup_date)) + '. Estimate ' + money(amountOf(r)) + '.</p>' + fit + '<div class="acts">';
@@ -1105,28 +1154,143 @@ function printSign(){
 window.addEventListener('afterprint', function(){ document.body.classList.remove('print-sign'); });
 
 /* ---------- setup ---------- */
+// [input id, settings column, kind]: a number is the minimum for a number field.
 var SETUP = [
   ['s-url', 'form_url'], ['s-depot', 'depot_address'], ['s-cap', 'capacity', 1], ['s-return', 'return_miles', 0],
   ['s-pcar', 'price_car', 0], ['s-psuv', 'price_suv', 0], ['s-ptruck', 'price_truck', 0],
-  ['s-zelle', 'zelle'], ['s-payee', 'payee'], ['s-ctire', 'cost_tire', 0], ['s-cmile', 'cost_mile', 0]
+  ['s-zelle', 'zelle'], ['s-payee', 'payee'], ['s-ctire', 'cost_tire', 0], ['s-cmile', 'cost_mile', 0],
+  ['s-ealerts', 'email_alerts', 'bool'], ['s-nemail', 'notify_email']
 ];
 function fillSetup(){
   var s = state.settings;
-  SETUP.forEach(function(f){ $(f[0]).value = s[f[1]] == null ? '' : s[f[1]]; });
+  SETUP.forEach(function(f){
+    if (f[2] === 'bool') $(f[0]).checked = !!s[f[1]];
+    else $(f[0]).value = s[f[1]] == null ? '' : s[f[1]];
+  });
   var auto = autoFormUrl();
   $('s-url-note').textContent = auto
     ? 'Leave blank to use this site\'s request page: ' + auto
     : 'Once these files are online, leave this blank to use the request page next to the dashboard, or enter your own link. Location signs add ?loc= to the end of it.';
+  $('email-state').innerHTML = emailStateHTML();
   $('acct-email').textContent = me ? me.email : '';
 }
 function readSetup(){
   var s = state.settings, v = {};
   SETUP.forEach(function(f){
-    var raw = $(f[0]).value, val = f.length > 2 ? pos(raw, +s[f[1]], f[2]) : raw.trim();
-    if (val !== (f.length > 2 ? +s[f[1]] : s[f[1]])) v[f[1]] = val;
+    var el = $(f[0]), cur = s[f[1]], val;
+    if (f[2] === 'bool') val = el.checked;
+    else if (typeof f[2] === 'number'){ cur = +cur; val = pos(el.value, cur, f[2]); }
+    else val = el.value.trim();
+    if (val !== cur) v[f[1]] = val;
   });
+  if (v.notify_email && !/^\S+@\S+\.\S+$/.test(v.notify_email)){
+    delete v.notify_email;
+    toast('That alert email address does not look right.');
+  }
   if (Object.keys(v).length) change({t:'settings', k:'upd', id:1, v:v});
   fillSetup();
+}
+
+/* ---------- notifications ---------- */
+var DEVICE_ALERTS = 'apex-device-alerts';
+function unreadCount(){ return state.notifications.filter(function(n){ return !n.read_at; }).length; }
+function emailStatusHTML(n){
+  if (n.email_status === 'sent') return 'Emailed';
+  if (n.email_status === 'pending' || n.email_status === 'sending') return 'Sending email';
+  if (n.email_status === 'failed') return '<span class="fail">Email failed: ' + esc(n.email_error || 'unknown error') + '</span>';
+  return '';
+}
+function emailStateHTML(){
+  var s = state.settings, last = null;
+  if (!s.email_alerts) return 'Email alerts are off.';
+  if (!s.notify_email) return 'Add an email address to get alerts.';
+  state.notifications.some(function(n){ if (n.email_status !== 'off'){ last = n; return true; } return false; });
+  if (!last) return 'Alerts go to ' + esc(s.notify_email) + '. No emails sent yet.';
+  if (last.email_status === 'sent') return 'Alerts go to ' + esc(s.notify_email) + '. Last email sent ' + esc(ago(last.emailed_at || last.created_at)) + '.';
+  if (last.email_status === 'failed') return '<span class="fail">The last email failed: ' + esc(last.email_error || 'unknown error') + '</span>';
+  return 'Sending an email now.';
+}
+function deviceAlertsOn(){ return lsGet(DEVICE_ALERTS) === true && 'Notification' in window && Notification.permission === 'granted'; }
+function deviceAlertsHTML(){
+  if (!('Notification' in window)) return '<p>Pop-up alerts are not available in this browser. On iPhone, add the dashboard to your Home Screen first.</p>';
+  if (Notification.permission === 'denied') return '<p>Pop-up alerts are blocked for this site in the browser settings.</p>';
+  if (deviceAlertsOn()) return '<div class="np-row"><span>Pop-up alerts are on for this device.</span><button class="btn quiet" type="button" data-act="alerts-off">Turn off</button></div>';
+  return '<button class="btn" type="button" data-act="alerts-on">Show pop-up alerts on this device</button>';
+}
+function renderNotifs(){
+  var list = state.notifications, unread = unreadCount();
+  $('bell-count').hidden = !unread;
+  $('bell-count').textContent = unread > 99 ? '99+' : unread;
+  $('bell').setAttribute('aria-label', unread ? 'Notifications, ' + unread + ' unread' : 'Notifications');
+  document.title = (unread ? '(' + unread + ') ' : '') + 'Apex daily pickups';
+  try { if (navigator.setAppBadge){ if (unread) navigator.setAppBadge(unread); else navigator.clearAppBadge(); } } catch (e) {}
+  $('nlist').innerHTML = list.length ? list.map(function(n){
+    var st = emailStatusHTML(n);
+    return '<li class="nitem' + (n.read_at ? '' : ' is-unread') + '"><button type="button" data-act="notif-open" data-id="' + n.id + '">' +
+      '<b>' + esc(n.title) + '</b><span>' + esc(n.body) + '</span><small>' + esc(ago(n.created_at)) + (st ? ', ' + st : '') + '</small></button></li>';
+  }).join('') : '<li class="np-empty">No notifications yet. New pickup requests show up here.</li>';
+  $('np-foot').innerHTML = '<p>' + emailStateHTML() + '</p>' + deviceAlertsHTML();
+}
+function setPanel(open){
+  $('npanel').hidden = !open;
+  $('bell').setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+async function popAlert(n){
+  if (!deviceAlertsOn()) return;
+  var opts = {body:n.body, tag:n.id};
+  try {
+    var reg = navigator.serviceWorker ? await navigator.serviceWorker.getRegistration() : null;
+    if (reg) await reg.showNotification(n.title, opts);
+    else new Notification(n.title, opts);
+  } catch (e) {}
+}
+function announce(fresh){
+  toast(fresh.length === 1 ? fresh[0].title : fresh.length + ' new notifications');
+  if (document.visibilityState !== 'visible') fresh.slice(0, 3).forEach(popAlert);
+}
+async function enableDeviceAlerts(){
+  var p = await Notification.requestPermission();
+  lsSet(DEVICE_ALERTS, p === 'granted');
+  renderNotifs();
+  if (p === 'granted') popAlert({id:'apex-alerts-on', title:'Pop-up alerts are on', body:'New pickup requests will pop up here while the dashboard is open.'});
+}
+var flashReqId = null, flashTimer;
+function openNotification(id){
+  var n = findIn(state.notifications, id);
+  if (!n) return;
+  if (n.request_id && findIn(state.requests, n.request_id)) flashReqId = n.request_id;
+  if (!n.read_at) change({t:'notifications', k:'upd', id:id, v:{read_at:new Date().toISOString()}});
+  else renderAll(true);
+  var li = flashReqId && $('req-' + flashReqId);
+  if (li){
+    setPanel(false);
+    li.scrollIntoView({behavior:'smooth', block:'center'});
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(function(){
+      var el = $('req-' + flashReqId);
+      if (el) el.classList.remove('flash');
+      flashReqId = null;
+    }, 2500);
+  }
+}
+function markAllRead(){
+  var at = new Date().toISOString(), ops = [];
+  state.notifications.forEach(function(n){ if (!n.read_at) ops.push({t:'notifications', k:'upd', id:n.id, v:{read_at:at}}); });
+  if (ops.length) changeMany(ops);
+}
+async function testEmail(btn){
+  btn.disabled = true;
+  for (var t = Date.now(); queue.length && Date.now() - t < 6000;){ flush(); await new Promise(function(r){ setTimeout(r, 300); }); }
+  var r = await sb.rpc('send_test_notification');
+  btn.disabled = false;
+  if (r.error){ toast(r.status ? errText(r.error) : 'You are offline. Try again once you have signal.'); return; }
+  toast('Test email on its way to ' + state.settings.notify_email + '.');
+  refresh();
+}
+function rememberDashboardUrl(){
+  if (location.protocol !== 'https:') return;
+  var here = location.origin + location.pathname.replace(/index\.html$/, '');
+  if (state.settings.dashboard_url !== here) change({t:'settings', k:'upd', id:1, v:{dashboard_url:here}});
 }
 
 /* ---------- render all ---------- */
@@ -1140,7 +1304,7 @@ function renderAll(force){
   if (!force && editing()){ pendingRender = true; renderSync(); return; }
   pendingRender = false;
   var t = totals();
-  renderHero(t); renderRoute(t); renderPay(t); renderReq(t); renderLocs(); renderMonth(t); renderQR(); postFormInfo();
+  renderHero(t); renderRoute(t); renderPay(t); renderReq(t); renderLocs(); renderMonth(t); renderQR(); postFormInfo(); renderNotifs();
   if (!$('setup').contains(document.activeElement)) fillSetup();
   reArm();
   renderSync();
@@ -1259,6 +1423,11 @@ document.addEventListener('click', function(e){
   if (act === 'signout'){ signOut(b); return; }
   if (act === 'csv'){ exportCsv(b); return; }
   if (act === 'print-sign'){ printSign(); return; }
+  if (act === 'notif-open'){ openNotification(id); return; }
+  if (act === 'notif-readall'){ markAllRead(); return; }
+  if (act === 'alerts-on'){ enableDeviceAlerts(); return; }
+  if (act === 'alerts-off'){ lsSet(DEVICE_ALERTS, false); renderNotifs(); return; }
+  if (act === 'test-email'){ testEmail(b); return; }
   if (act === 'loc-new'){ openLocForm(null); return; }
   if (act === 'loc-edit'){ openLocForm(id); return; }
   if (act === 'loc-cancel'){ closeLocForm(); return; }
@@ -1299,7 +1468,7 @@ window.addEventListener('message', function(e){
   var f = $('form-frame');
   if (!e.data || e.source !== f.contentWindow) return;
   if (e.data.type === 'apex-form-ready') postFormInfo();
-  if (e.data.type === 'apex-request-sent'){ toast('Request added to your inbox'); refresh(); }
+  if (e.data.type === 'apex-request-sent') refresh();
 });
 window.addEventListener('online', function(){ flush(); refresh(); });
 window.addEventListener('offline', function(){ net = false; renderSync(); });
@@ -1319,8 +1488,9 @@ var LINKS = {signin:'I already have an account', signup:'Create the owner accoun
 var gateMode = 'signin', ownerClaimed = null, recovering = /type=recovery/.test(location.hash);
 function showView(v){
   var app = v === 'app';
-  $('app').hidden = !app; $('hero-grid').hidden = !app; $('kpis').hidden = !app; $('sync').hidden = !app;
+  $('app').hidden = !app; $('hero-grid').hidden = !app; $('kpis').hidden = !app; $('brand-tools').hidden = !app;
   $('gate').hidden = v !== 'gate'; $('hero-gate').hidden = app;
+  if (!app) setPanel(false);
 }
 function setGate(mode, ok){
   gateMode = mode;
@@ -1416,6 +1586,10 @@ function startApp(cache){
   subscribe();
   refresh();
   flush();
+  // Lets pop-up alerts work on phones, which only show them through a service worker.
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  }
 }
 function stopApp(){
   if (!startedFor) return;
@@ -1425,6 +1599,8 @@ function stopApp(){
   lsSet(cKey(), null);
   queue = []; server = emptyData(); state = emptyData(); undoId = null; qrLoc = ''; lastQr = null;
   closeLocForm();
+  document.title = 'Apex daily pickups';
+  try { if (navigator.clearAppBadge) navigator.clearAppBadge(); } catch (e) {}
 }
 
 /* ---------- init ---------- */
@@ -1448,6 +1624,15 @@ $('gate-links').addEventListener('click', function(e){
   else setGate(k);
 });
 $('qr-for').addEventListener('change', function(){ qrLoc = this.value; renderQR(); });
+$('bell').addEventListener('click', function(){ setPanel($('npanel').hidden); });
+document.addEventListener('click', function(e){
+  // composedPath still holds the panel when a click re-rendered the item inside it
+  var path = e.composedPath ? e.composedPath() : [e.target];
+  if (!$('npanel').hidden && path.indexOf($('npanel')) < 0 && path.indexOf($('bell')) < 0) setPanel(false);
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && !$('npanel').hidden){ setPanel(false); $('bell').focus(); }
+});
 $('form-frame').addEventListener('load', postFormInfo);
 SETUP.forEach(function(f){ $(f[0]).addEventListener('change', readSetup); });
 $('s-url').addEventListener('input', function(){ renderQR(this.value.trim()); });
