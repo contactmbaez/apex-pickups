@@ -490,7 +490,7 @@ input[type=text],input[type=tel],input[type=email],input[type=password],input[ty
         <label class="check"><input id="s-ealerts" type="checkbox"> Email me when a customer requests a pickup</label>
         <label>Send alerts to
           <input id="s-nemail" type="email" autocomplete="email" inputmode="email">
-          <small>Resend's free sender only delivers to the email on your Resend account. To send elsewhere, verify a domain in Resend.</small>
+          <small id="s-from-note"></small>
         </label>
         <p class="meta" id="email-state"></p>
         <div class="acts"><button class="btn quiet" type="button" data-act="test-email">Send a test email</button></div>
@@ -1434,6 +1434,9 @@ function fillSetup(){
     ? 'Leave blank to use this site\'s request page: ' + auto
     : 'Once these files are online, leave this blank to use the request page next to the dashboard, or enter your own link. Location signs add ?loc= to the end of it.';
   $('email-state').innerHTML = emailStateHTML();
+  $('s-from-note').textContent = s.alert_from
+    ? 'Alert emails come from ' + s.alert_from + '.'
+    : 'Alert emails come from Resend\'s test address, which only delivers to the email on your Resend account.';
   $('acct-email').textContent = me ? me.email : '';
 }
 function readSetup(){
