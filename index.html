@@ -1,0 +1,1469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Apex daily pickups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#E3E5E6; --panel:#FBFBFA; --panel-2:#EFF0F0; --ink:#1E2227; --ink-2:#4B535C; --line:#C6CBCE;
+  --blue:#1F5FD1; --on-blue:#FFFFFF; --sign:#1F5FD1;
+  --green:#1E7F4B; --on-green:#FFFFFF; --green-bg:#DCF0E3;
+  --red:#B93A26; --red-bg:#F8E1DC;
+  --amber:#6F4A00; --amber-bg:#FCEFC4;
+  --yellow:#F5B800;
+  --hero:#1E2227; --hero-ink:#F2F3F3; --hero-mute:#AEB6BD; --hero-line:#3A424A;
+  --focus:#1F5FD1;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111417; --panel:#1B2025; --panel-2:#242B32; --ink:#ECEEEF; --ink-2:#A8B0B8; --line:#2F373E;
+    --blue:#7BA7FF; --on-blue:#0D1013;
+    --green:#5CC48A; --on-green:#0D1013; --green-bg:#1C3A2A;
+    --red:#FF8F7C; --red-bg:#40201B;
+    --amber:#F2C55C; --amber-bg:#3A2F10;
+    --hero:#0C0F12; --hero-line:#2A323A; --focus:#7BA7FF;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111417; --panel:#1B2025; --panel-2:#242B32; --ink:#ECEEEF; --ink-2:#A8B0B8; --line:#2F373E;
+  --blue:#7BA7FF; --on-blue:#0D1013;
+  --green:#5CC48A; --on-green:#0D1013; --green-bg:#1C3A2A;
+  --red:#FF8F7C; --red-bg:#40201B;
+  --amber:#F2C55C; --amber-bg:#3A2F10;
+  --hero:#0C0F12; --hero-line:#2A323A; --focus:#7BA7FF;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;margin:0;line-height:1.05}
+p{margin:0}
+a{color:var(--blue)}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.hero :focus-visible{outline-color:#8DB4FF}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+.ico{width:18px;height:18px;flex:none}
+
+/* Hero */
+.hero{background:var(--hero);color:var(--hero-ink);padding:16px 0 0}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 0 20px}
+.mark{width:34px;height:31px}
+.brand-name{font:600 21px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.03em}
+.sync{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--hero-mute);text-align:right}
+.sync i{width:8px;height:8px;border-radius:50%;background:#5CC48A;flex:none}
+.sync.saving i{background:var(--yellow)}
+.sync.offline i{background:#FF8F7C}
+.hero-gate{padding:0 0 34px}
+.hero-grid{display:grid;gap:22px;align-items:center}
+@media(min-width:900px){.hero-grid{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:36px}}
+.date{color:var(--hero-mute);font-size:15px;margin-bottom:6px}
+.hero h1{font-size:clamp(46px,9vw,80px);font-weight:700}
+.next{margin:8px 0 20px;font-size:17px}
+.load-figure{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:16px}
+.load-figure .big{font:700 60px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;color:var(--yellow);font-variant-numeric:tabular-nums}
+.load-note{margin-top:8px;color:var(--hero-mute);font-size:15px;max-width:46ch}
+.load-note.over{color:#FFB9AB}
+.truck{margin:0}
+.truck svg{display:block;width:100%;height:auto}
+.truck figcaption{color:var(--hero-mute);font-size:13px;margin-top:8px}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin:26px 0 0;border-top:1px solid var(--hero-line)}
+.kpi{padding:14px 10px 16px 0;border-bottom:1px solid var(--hero-line)}
+.kpi dt{color:var(--hero-mute);font-size:14px}
+.kpi dd{margin:0}
+.kpi .v{font:700 36px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:13px;color:var(--hero-mute)}
+.kpi.warn .v{color:#FFB9AB}
+@media(min-width:760px){
+  .kpis{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .kpi{border-bottom:0;padding:16px 10px 18px 16px;border-left:1px solid var(--hero-line)}
+  .kpi:first-child{border-left:0;padding-left:0}
+}
+
+/* Body */
+main{padding:22px 0 48px}
+.board{display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:980px){.board{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);align-items:start}.route{grid-row:span 2}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;margin-bottom:14px}
+.panel h2{font-size:30px;font-weight:600}
+.aside{color:var(--ink-2);font-size:14px}
+.empty{color:var(--ink-2);padding:8px 0}
+.meta{color:var(--ink-2);font-size:14px;margin-top:2px}
+.meta a{color:inherit}
+.note{margin-top:10px;font-size:14px;background:var(--panel-2);border-radius:8px;padding:6px 10px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);font-size:13px}
+.btn{min-height:44px;padding:0 16px;border-radius:10px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font-weight:600;font-size:15px;cursor:pointer}
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.btn.primary{background:var(--yellow);border-color:var(--yellow);color:#1E2227}
+.btn.quiet{border-color:var(--line);color:var(--ink-2);font-weight:500}
+.btn.blue{background:var(--blue);border-color:var(--blue);color:var(--on-blue);width:100%}
+.btn:hover{filter:brightness(.95)}
+.btn:disabled{opacity:.6;cursor:default}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
+/* Sign in */
+.gate-wrap{padding:22px 16px 48px}
+.gate{max-width:440px;margin:0 auto}
+.gate .lead{color:var(--ink-2);font-size:15px;margin:6px 0 16px}
+.field{display:grid;gap:5px;margin:0 0 12px;border:0;padding:0;min-width:0}
+.field>span,.field legend{font-size:14px;font-weight:600;padding:0}
+.field small{color:var(--ink-2);font-size:13px}
+.form-err{color:var(--red);font-size:14px;font-weight:600;min-height:1.4em;margin-bottom:6px}
+.form-ok{color:var(--green);font-size:14px;font-weight:600;margin-bottom:10px}
+.form-ok:empty{display:none}
+
+/* Route */
+.stops{list-style:none;margin:0;padding:0;position:relative}
+.stops::before{content:"";position:absolute;left:19px;top:20px;bottom:20px;border-left:3px dashed var(--yellow)}
+.stop{position:relative;display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px;padding:0 0 16px}
+.stop:last-child{padding-bottom:0}
+.marker{position:relative;z-index:1;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:700 21px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;background:var(--panel);border:3px solid var(--ink);color:var(--ink)}
+.is-active .marker{background:var(--yellow);color:#1E2227}
+.is-done .marker{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.marker svg{width:20px;height:20px}
+.stop-body{min-width:0;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--panel)}
+.is-active .stop-body{border-color:var(--ink);box-shadow:0 0 0 2px var(--yellow)}
+.is-done .stop-body{background:var(--panel-2)}
+.stop-head{display:flex;justify-content:space-between;gap:12px}
+.stop h3{font-size:25px;font-weight:600}
+.amt{text-align:right;font:700 27px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.amt small{display:block;font:400 13px/1.3 "Public Sans",system-ui,sans-serif;color:var(--ink-2);margin-top:4px}
+.mix{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.stop-line{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin-top:10px;font-size:14px;color:var(--ink-2)}
+.status{display:inline-flex;align-items:center;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;border:1px solid var(--line);color:var(--ink)}
+.status.s-active{background:var(--yellow);border-color:var(--yellow);color:#1E2227}
+.status.s-done{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.edit{display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:10px}
+.edit label{display:grid;gap:3px;font-size:13px;color:var(--ink-2)}
+.edit input{width:auto;min-width:0}
+.edit input[type=number]{width:130px}
+.counts{display:grid;gap:8px;margin-top:12px}
+.crow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.crow span{font-weight:600}
+.crow small{color:var(--ink-2);font-weight:400;margin-left:6px}
+.stepper{display:inline-flex;align-items:center;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--panel);flex:none}
+.stepper button{width:44px;height:44px;border:0;background:var(--panel-2);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+.stepper output{min-width:52px;text-align:center;font:700 22px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif}
+.payrow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 14px;margin-top:12px}
+.payrow label{display:grid;gap:3px;font-size:13px;color:var(--ink-2)}
+.paystate{font-weight:600;font-size:14px;padding:2px 0}
+.paystate.is-paid{color:var(--green)}
+.paystate.is-owed{color:var(--red)}
+.ret{margin:14px 0 0 54px;font-size:14px;color:var(--ink-2)}
+input[type=text],input[type=tel],input[type=email],input[type=password],input[type=number],input[type=time],input[type=date],select{color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:10px;min-height:44px;padding:0 12px;width:100%}
+
+/* Payments */
+.mlist{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+.mname{display:flex;align-items:center;gap:8px;font-weight:600}
+.mname small{font-weight:400;color:var(--ink-2)}
+.mbar{display:flex;height:12px;border-radius:6px;background:var(--panel-2);overflow:hidden;margin:7px 0 6px}
+.mbar i{display:block;height:100%}
+.mbar .c{background:var(--green)}
+.mbar .o{background:var(--red)}
+.mbar .u{background:transparent;border:1.5px dashed var(--ink-2);border-left:0}
+.mfig{display:flex;flex-wrap:wrap;gap:2px 14px;font-size:13px;color:var(--ink-2)}
+.mfig b{color:var(--ink);font-variant-numeric:tabular-nums}
+.mfig .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.hand{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);display:grid;gap:6px;font-size:15px}
+.hand div{display:flex;justify-content:space-between;gap:10px}
+.hand b{font-variant-numeric:tabular-nums}
+.margin{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--panel-2)}
+.margin strong{font:700 30px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;display:block;margin-top:2px}
+.margin p{font-size:13px;color:var(--ink-2);margin-top:6px}
+
+.owed-early{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line)}
+.owed-early h3{font-size:22px;font-weight:600;margin-bottom:10px}
+.owed-early ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.owed-early li{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.owed-early b{display:block;font-weight:600}
+.hand .btn{margin-top:6px;justify-self:start}
+.closeout{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line)}
+.closeout p{font-size:14px;color:var(--ink-2);max-width:62ch}
+.tbl-wrap{overflow-x:auto;margin-top:18px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.tbl caption{text-align:left;font:600 22px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;margin-bottom:6px}
+.tbl th,.tbl td{padding:8px 12px 8px 0;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{font-weight:600;color:var(--ink-2)}
+
+/* Requests */
+.rlist{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.req{border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.req-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.req h3{font-size:22px;font-weight:600}
+.fit{font-size:14px;font-weight:600;margin-top:10px}
+.fit.ok{color:var(--green)}
+.fit.bad{color:var(--red)}
+
+/* Locations */
+.locs{margin-top:20px}
+.locs-intro{color:var(--ink-2);font-size:14px;max-width:70ch;margin:-6px 0 14px}
+.llist{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+@media(min-width:760px){.llist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1100px){.llist{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.loc{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column}
+.loc h3{font-size:22px;font-weight:600}
+.loc .acts{margin-top:auto;padding-top:12px}
+.on-route{font-size:14px;font-weight:600;color:var(--green);align-self:center}
+.lform{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+.lform h3{font-size:22px;font-weight:600;margin-bottom:12px}
+.lgrid{display:grid;gap:0 14px}
+@media(min-width:760px){.lgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Intake */
+.intake{margin-top:20px}
+.sign-tools{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px;margin-bottom:16px}
+.sign-tools label{display:grid;gap:4px;font-size:14px;font-weight:600;flex:1 1 260px;max-width:420px}
+.intake-grid{display:grid;gap:26px}
+@media(min-width:900px){.intake-grid{grid-template-columns:minmax(0,1fr) 380px;align-items:start}}
+.sign{background:var(--sign);color:#fff;border-radius:18px;padding:10px}
+.sign-in{border:3px solid #fff;border-radius:12px;padding:22px 20px;text-align:center}
+.sign h3{color:#fff;font-size:40px;font-weight:700;margin-bottom:16px}
+.qr-tile{background:#fff;border-radius:10px;padding:8px;max-width:290px;margin:0 auto}
+.qr-tile svg{display:block;width:100%;height:auto}
+.qr-msg{color:#1E2227;font-size:14px;padding:26px 8px}
+.qr-for-name{margin-top:12px;font:600 24px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif}
+.qr-url{margin-top:10px;font-size:14px;word-break:break-all;opacity:.95}
+.steps{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:12px;text-align:left}
+.steps li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:center;font-size:16px}
+.steps b{width:34px;height:34px;border-radius:50%;background:#fff;color:var(--sign);display:grid;place-items:center;font:700 20px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif}
+.accept{margin-top:20px;padding-top:16px;border-top:2px dashed rgba(255,255,255,.6)}
+.accept p{font-size:14px;margin-bottom:10px}
+.accept ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.accept li{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#fff;color:#1E2227;font-size:14px;font-weight:600}
+.preview-cap{font-size:14px;color:var(--ink-2);margin-bottom:12px;text-align:center}
+.phone{width:100%;max-width:340px;margin:0 auto;border:10px solid #1E2227;border-radius:38px;background:#1E2227}
+.phone iframe{display:block;width:100%;height:700px;border:0;border-radius:28px;background:#fff}
+
+/* Month + impact */
+.duo{display:grid;gap:20px;margin-top:20px}
+@media(min-width:900px){.duo{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+.chart{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:3px;height:170px}
+.day{position:relative;border-bottom:2px solid var(--line)}
+.day .bar{position:absolute;left:0;right:0;bottom:0;background:var(--blue);border-radius:2px 2px 0 0}
+.day .ghost{position:absolute;left:0;right:0;bottom:0;border:1.5px dashed var(--ink-2);border-bottom:0;border-radius:2px 2px 0 0}
+.day.now .bar{background:var(--yellow)}
+.dlab{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:3px;margin-top:6px;font-size:12px;color:var(--ink-2)}
+.dlab span{white-space:nowrap}
+.bignum{font:700 64px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.impact p+p{margin-top:8px}
+.summary{margin-bottom:12px;font-size:15px}
+.summary b{font-variant-numeric:tabular-nums}
+
+/* Setup */
+.setup{margin-top:20px}
+.setup summary{cursor:pointer;font:600 28px/1.1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif}
+.setup-note{color:var(--ink-2);font-size:14px;margin-top:8px;max-width:70ch}
+.setup-grid{display:grid;gap:14px;margin-top:16px}
+@media(min-width:760px){.setup-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.setup-grid label{display:grid;gap:4px;font-size:14px;font-weight:600}
+.setup-grid small{font-weight:400;color:var(--ink-2);word-break:break-word}
+.wide{grid-column:1/-1}
+.account{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;font-size:15px}
+
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1E2227;color:#fff;border:1px solid #3A424A;padding:12px 18px;border-radius:10px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:10;max-width:calc(100% - 32px)}
+.toast.show{opacity:1}
+@media(prefers-reduced-motion:reduce){.toast{transition:none}}
+
+@media print{
+  body.print-sign{background:#fff}
+  body.print-sign .hero,body.print-sign .toast,body.print-sign #app>:not(#intake),body.print-sign #intake>:not(.intake-grid),body.print-sign .intake-grid>:not(.sign){display:none!important}
+  body.print-sign #app{padding:0}
+  body.print-sign #intake{border:0;padding:0;margin:0;background:none}
+  body.print-sign .intake-grid{display:block}
+  body.print-sign .sign{max-width:560px;margin:0 auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 40 36" aria-hidden="true"><path d="M20 2 L38 34 H28 L20 18 L12 34 H2 Z" fill="#4C86F0"/><path d="M20 23 L25 34 H15 Z" fill="#F2F3F3"/></svg>
+      <span class="brand-name">Apex Material Recovery</span>
+      <span class="sync" id="sync" hidden></span>
+    </div>
+    <div class="hero-gate" id="hero-gate">
+      <p class="date" id="gate-date"></p>
+      <h1>Daily pickups</h1>
+    </div>
+    <div class="hero-grid" id="hero-grid" hidden>
+      <div>
+        <p class="date" id="today-date"></p>
+        <h1 id="hero-title">Loading route</h1>
+        <p class="next" id="hero-next"></p>
+        <div class="load-figure"><span class="big" id="load-now">0</span><span>of <span id="load-cap">450</span> tire spaces loaded</span></div>
+        <p class="load-note" id="load-note"></p>
+      </div>
+      <figure class="truck">
+        <div id="truck-svg"></div>
+        <figcaption>26 ft box truck, cutaway. Rear door is on the left; loads fill from the cab wall back toward the door. Solid tires are on board, dashed circles are still to pick up.</figcaption>
+      </figure>
+    </div>
+    <dl class="kpis" id="kpis" hidden></dl>
+  </div>
+</section>
+
+<div class="gate-wrap" id="gate" hidden>
+  <section class="panel gate" aria-labelledby="gate-h">
+    <h2 id="gate-h">Sign in</h2>
+    <p class="lead" id="gate-lead"></p>
+    <p class="form-ok" id="a-ok" role="status"></p>
+    <form id="auth-form" novalidate>
+      <label class="field" id="a-email-wrap"><span>Email</span><input id="a-email" type="email" autocomplete="username" inputmode="email"></label>
+      <label class="field" id="a-pass-wrap"><span>Password</span><input id="a-pass" type="password" autocomplete="current-password"><small id="a-pass-hint" hidden>At least 8 characters.</small></label>
+      <p class="form-err" id="a-err" role="alert"></p>
+      <button class="btn blue" type="submit" id="a-submit">Sign in</button>
+    </form>
+    <div class="acts" id="gate-links"></div>
+  </section>
+</div>
+
+<main class="wrap" id="app" hidden>
+  <div class="board">
+    <section class="panel route" aria-labelledby="route-h">
+      <div class="panel-head"><h2 id="route-h">Today's route</h2><p class="aside" id="route-aside"></p></div>
+      <div id="route-list"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="pay-h">
+      <div class="panel-head"><h2 id="pay-h">Getting paid</h2><p class="aside" id="pay-aside"></p></div>
+      <div id="pay-body"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="req-h">
+      <div class="panel-head"><h2 id="req-h">New requests</h2><p class="aside" id="req-aside"></p></div>
+      <div id="req-body"></div>
+    </section>
+  </div>
+
+  <section class="panel locs" aria-labelledby="loc-h">
+    <div class="panel-head"><h2 id="loc-h">Locations</h2><p class="aside" id="loc-aside"></p></div>
+    <p class="locs-intro">Shops and fleets you pick up from regularly. Each one gets its own QR sign, so their requests arrive with the name and address filled in.</p>
+    <div id="loc-body"></div>
+    <form class="lform" id="loc-form" novalidate hidden>
+      <h3 id="l-title">New location</h3>
+      <div class="lgrid">
+        <label class="field"><span>Business name</span><input id="l-name" type="text" autocomplete="off"></label>
+        <label class="field"><span>Address</span><input id="l-addr" type="text" autocomplete="off"></label>
+        <label class="field"><span>Contact name</span><input id="l-contact" type="text" autocomplete="off"></label>
+        <label class="field"><span>Phone</span><input id="l-phone" type="tel" autocomplete="off" inputmode="tel"></label>
+        <label class="field"><span>Usually pays by</span><select id="l-pay"></select></label>
+      </div>
+      <p class="form-err" id="l-err" role="alert"></p>
+      <div class="acts"><button class="btn primary" type="submit" id="l-save">Save location</button><button class="btn quiet" type="button" data-act="loc-cancel">Cancel</button></div>
+    </form>
+    <div class="acts" id="loc-new-wrap"><button class="btn" type="button" data-act="loc-new">Add a location</button></div>
+  </section>
+
+  <section class="panel intake" id="intake" aria-labelledby="intake-h">
+    <div class="panel-head"><h2 id="intake-h">Customer QR code and request form</h2><p class="aside">Print a sign for each location, or use the form to log a phone call</p></div>
+    <div class="sign-tools">
+      <label>QR code for<select id="qr-for"></select></label>
+      <button class="btn" type="button" data-act="print-sign">Print this sign</button>
+    </div>
+    <div class="intake-grid">
+      <div class="sign">
+        <div class="sign-in">
+          <h3>Scan to request a tire pickup</h3>
+          <div class="qr-tile" id="qr"></div>
+          <p class="qr-for-name" id="qr-for-name" hidden></p>
+          <p class="qr-url" id="qr-url"></p>
+          <ol class="steps">
+            <li><b>1</b><span>Scan the code with your phone camera.</span></li>
+            <li><b>2</b><span>Enter your tire counts and pick a date.</span></li>
+            <li><b>3</b><span>Choose how you'll pay. We do the rest.</span></li>
+          </ol>
+          <div class="accept">
+            <p>Accepted at pickup</p>
+            <ul id="accept-list"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="preview-cap">This is the form customers see. Requests sent from it land in your inbox above.</p>
+        <div class="phone"><iframe id="form-frame" title="Customer request form"></iframe></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="duo">
+    <section class="panel" aria-labelledby="month-h">
+      <div class="panel-head"><h2 id="month-h">This month</h2><p class="aside" id="month-aside"></p></div>
+      <div id="month-body"></div>
+      <div class="acts"><button class="btn quiet" type="button" data-act="csv">Download pickup log (CSV)</button></div>
+    </section>
+    <section class="panel impact" aria-labelledby="impact-h">
+      <div class="panel-head"><h2 id="impact-h">Tires collected</h2><p class="aside" id="impact-aside"></p></div>
+      <div id="impact-body"></div>
+    </section>
+  </div>
+
+  <details class="panel setup" id="setup">
+    <summary>Setup</summary>
+    <p class="setup-note">Change your prices, truck size and payment details here. Changes save to your account and show up on your other devices. The two cost fields are placeholders: replace them with your real disposal and truck costs so the margin is accurate.</p>
+    <div class="setup-grid">
+      <label class="wide">Request form link (the QR codes point here)
+        <input id="s-url" type="text" inputmode="url" autocomplete="off">
+        <small id="s-url-note"></small>
+      </label>
+      <label class="wide">Yard address (where the truck starts and ends the day)
+        <input id="s-depot" type="text" autocomplete="off">
+        <small>Used to open the day's route in Google Maps.</small>
+      </label>
+      <label>Truck capacity (tire spaces)
+        <input id="s-cap" type="number" min="1" step="1" inputmode="numeric">
+        <small>One car tire is 1 space, an SUV tire 1.3, a truck tire 3.5. 450 is a starting estimate for a 26 ft box truck by weight and volume. Adjust it after a few real loads.</small>
+      </label>
+      <label>Miles back to the yard after the last stop
+        <input id="s-return" type="number" min="0" step="1" inputmode="decimal">
+      </label>
+      <label>Price per car tire ($)<input id="s-pcar" type="number" min="0" step="0.25" inputmode="decimal"></label>
+      <label>Price per SUV tire ($)<input id="s-psuv" type="number" min="0" step="0.25" inputmode="decimal"></label>
+      <label>Price per truck tire ($)<input id="s-ptruck" type="number" min="0" step="0.25" inputmode="decimal"></label>
+      <label>Zelle email or phone (shown to customers)<input id="s-zelle" type="text" autocomplete="off"></label>
+      <label>Make checks payable to<input id="s-payee" type="text" autocomplete="off"></label>
+      <label>Processing and disposal cost per tire ($, placeholder)<input id="s-ctire" type="number" min="0" step="0.05" inputmode="decimal"></label>
+      <label>Truck cost per mile ($, placeholder)<input id="s-cmile" type="number" min="0" step="0.05" inputmode="decimal"></label>
+    </div>
+    <div class="account">
+      <span>Signed in as <b id="acct-email"></b></span>
+      <button class="btn quiet" type="button" data-act="signout" data-arm="signout">Sign out</button>
+    </div>
+  </details>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+'use strict';
+
+var CFG = window.APEX_CONFIG || {};
+var TYPES = [
+  {k:'car',   label:'Car',   hint:'car and light truck', space:1,   lb:22},
+  {k:'suv',   label:'SUV',   hint:'SUV and pickup',      space:1.3, lb:30},
+  {k:'truck', label:'Truck', hint:'semi and commercial', space:3.5, lb:100}
+];
+var METHODS = [
+  {k:'card',  label:'Credit card'},
+  {k:'cash',  label:'Cash'},
+  {k:'zelle', label:'Zelle'},
+  {k:'check', label:'Check'}
+];
+var ICON = {
+  card:  '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="4" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2 8h16" stroke="currentColor" stroke-width="1.6"/><path d="M5 13h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  cash:  '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="5" width="16" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+  zelle: '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5h10L5 15h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  check: '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="5" width="16" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 12h5M13 8.5h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
+};
+var CHECK_SVG = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* ---------- helpers ---------- */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function r2(x){ return Math.round(x * 100) / 100; }
+function money(x){ x = r2(x); return '$' + (x % 1 === 0 ? x.toLocaleString('en-US') : x.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})); }
+function num(x){ return Math.round(x).toLocaleString('en-US'); }
+function iso(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function isoPlus(n){ var d = new Date(); d.setDate(d.getDate() + n); return iso(d); }
+function fmtDate(s){
+  if (!s) return 'any day';
+  if (s === isoPlus(0)) return 'today';
+  if (s === isoPlus(1)) return 'tomorrow';
+  if (s === isoPlus(-1)) return 'yesterday';
+  return new Date(s + 'T12:00:00').toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+}
+function fmtTime(t){
+  if (!t) return 'time not set';
+  var p = t.split(':'), h = +p[0];
+  var ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+  return h + ':' + p[1] + ' ' + ap;
+}
+function addMin(t, min){
+  var p = t.split(':'), v = Math.min(+p[0] * 60 + (+p[1]) + min, 20 * 60);
+  return pad(Math.floor(v / 60)) + ':' + pad(v % 60);
+}
+function ago(ts){
+  var m = Math.round((Date.now() - new Date(ts).getTime()) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + ' min ago';
+  var h = Math.round(m / 60);
+  if (h < 24) return h + (h === 1 ? ' hour ago' : ' hours ago');
+  return fmtDate(iso(new Date(ts)));
+}
+function pos(v, fallback, min){ var x = parseFloat(v); return (isFinite(x) && x >= min) ? x : fallback; }
+function methodLabel(k){ for (var i = 0; i < METHODS.length; i++) if (METHODS[i].k === k) return METHODS[i].label; return k; }
+function tireCount(o){ return (+o.car || 0) + (+o.suv || 0) + (+o.truck || 0); }
+function spaceOf(o){ return TYPES.reduce(function(a, t){ return a + (+o[t.k] || 0) * t.space; }, 0); }
+function weightOf(o){ return TYPES.reduce(function(a, t){ return a + (+o[t.k] || 0) * t.lb; }, 0); }
+function price(k){ return +state.settings['price_' + k] || 0; }
+function amountOf(o){ return TYPES.reduce(function(a, t){ return a + (+o[t.k] || 0) * price(t.k); }, 0); }
+function stopAmount(s){ return s.amount != null ? +s.amount : amountOf(s); }
+function mixChips(o){
+  var out = '';
+  TYPES.forEach(function(t){ if (+o[t.k] > 0) out += '<span class="chip">' + num(o[t.k]) + ' ' + t.label.toLowerCase() + '</span>'; });
+  return out || '<span class="chip">No tires counted yet</span>';
+}
+function clone(x){ return JSON.parse(JSON.stringify(x)); }
+function findIn(list, id){ for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i]; return null; }
+function uuid(){
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  var b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+  var h = Array.prototype.map.call(b, function(x){ return (x + 256).toString(16).slice(1); }).join('');
+  return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
+}
+function mapsDir(dest, waypoints){
+  var u = 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(dest);
+  if (waypoints && waypoints.length) u += '&waypoints=' + encodeURIComponent(waypoints.join('|'));
+  return u;
+}
+function telHref(p){ return 'tel:' + String(p).replace(/[^\d+]/g, ''); }
+function lsGet(k){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+function lsSet(k, v){ try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+function errText(e){ return (e && (e.message || e.error_description)) || 'unknown error'; }
+var toastTimer;
+function toast(msg){
+  var el = $('toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3200);
+}
+
+/* ---------- data ---------- */
+function defaultSettings(){
+  return {id:1, form_url:'', depot_address:'', capacity:450, return_miles:0, price_car:3, price_suv:4, price_truck:15,
+    zelle:'', payee:'Apex Material Recovery LLC', cost_tire:1, cost_mile:1.1};
+}
+function emptyData(){ return {settings:defaultSettings(), stops:[], requests:[], locations:[], days:[]}; }
+function newStop(o){
+  return Object.assign({id:uuid(), created_at:new Date().toISOString(), location_id:null, name:'', address:'', phone:'', notes:'',
+    arrival:null, leg:8, car:0, suv:0, truck:0, status:'scheduled', pay:'card', paid:false, paid_at:null, deposited:false,
+    amount:null, closed_on:null, closeout_id:null}, o);
+}
+
+var sb = null, me = null, startedFor = null, channel = null;
+var server = emptyData();   // last copy read from the database
+var state = emptyData();    // server copy plus changes still waiting to save
+var queue = [];             // changes waiting to save, oldest first
+var net = true, undoId = null, busy = false, writeSeq = 0, qrLoc = '';
+
+function byArrival(a, b){
+  var x = a.arrival || '99:99', y = b.arrival || '99:99';
+  if (x !== y) return x < y ? -1 : 1;
+  return a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0;
+}
+function routeStops(){ return state.stops.filter(function(s){ return !s.closeout_id; }).sort(byArrival); }
+function receivables(){
+  return state.stops.filter(function(s){ return s.closeout_id && !s.paid; })
+    .sort(function(a, b){ return a.closed_on < b.closed_on ? -1 : a.closed_on > b.closed_on ? 1 : 0; });
+}
+
+async function fetchAll(){
+  var r = await Promise.all([
+    sb.from('settings').select('*').eq('id', 1).maybeSingle(),
+    sb.from('stops').select('*').or('closeout_id.is.null,paid.is.false,and(deposited.is.false,pay.in.(cash,check))'),
+    sb.from('requests').select('*').order('created_at', {ascending:false}),
+    sb.from('locations').select('*').order('name'),
+    sb.from('daily_log').select('*').order('day', {ascending:false}).limit(62)
+  ]);
+  for (var i = 0; i < r.length; i++) if (r[i].error) throw r[i].error;
+  return {settings:r[0].data || defaultSettings(), stops:r[1].data, requests:r[2].data, locations:r[3].data, days:r[4].data};
+}
+
+/* ---------- saving: every change is applied here first, then sent ---------- */
+function qKey(){ return 'apex-queue-v2:' + me.id; }
+function cKey(){ return 'apex-cache-v2:' + me.id; }
+function saveQueue(){ lsSet(qKey(), queue); }
+function applyOp(st, op){
+  if (op.t === 'settings'){ Object.assign(st.settings, op.v); return; }
+  var list = st[op.t];
+  if (op.k === 'ins'){ if (!findIn(list, op.row.id)) list.push(Object.assign({}, op.row)); }
+  else if (op.k === 'upd'){ var x = findIn(list, op.id); if (x) Object.assign(x, op.v); }
+  else if (op.k === 'del'){ st[op.t] = list.filter(function(x){ return x.id !== op.id; }); }
+}
+function replay(base){ var st = clone(base); queue.forEach(function(op){ applyOp(st, op); }); return st; }
+function changeMany(ops){
+  ops.forEach(function(op){
+    applyOp(state, op);
+    var last = queue[queue.length - 1];
+    if (op.k === 'upd' && last && !last.sending && last.t === op.t && last.k === 'upd' && last.id === op.id) Object.assign(last.v, op.v);
+    else if (op.k === 'upd' && last && !last.sending && last.t === op.t && last.k === 'ins' && last.row.id === op.id) Object.assign(last.row, op.v);
+    else queue.push(clone(op));
+  });
+  saveQueue();
+  undoId = null;
+  disarmAll();
+  renderAll(true);
+  flush();
+}
+function change(op){ changeMany([op]); }
+
+function send(op){
+  var q = sb.from(op.t);
+  if (op.k === 'ins') return q.upsert(op.row, {onConflict:'id', ignoreDuplicates:true});
+  if (op.k === 'upd') return q.update(op.v).eq('id', op.id);
+  return q.delete().eq('id', op.id);
+}
+function retryable(res){ var s = res.status; return !s || s === 401 || s === 408 || s === 429 || s >= 500; }
+var flushing = false, retryTimer = null, retryDelay = 4000;
+async function flush(){
+  if (flushing || !startedFor || !queue.length){ renderSync(); return; }
+  flushing = true;
+  clearTimeout(retryTimer);
+  renderSync();
+  var rejected = false;
+  while (queue.length && startedFor){
+    var op = queue[0], res;
+    op.sending = true;
+    try {
+      var sess = await sb.auth.getSession();
+      res = sess.data.session ? await send(op) : {error:{message:'Not signed in'}, status:0};
+    } catch (e) { res = {error:e, status:0}; }
+    op.sending = false;
+    if (res.error && retryable(res)){
+      net = false;
+      retryTimer = setTimeout(flush, retryDelay);
+      retryDelay = Math.min(retryDelay * 2, 60000);
+      break;
+    }
+    queue.shift(); writeSeq++;
+    if (res.error){ rejected = true; toast('A change was not saved: ' + errText(res.error)); }
+    else { net = true; retryDelay = 4000; }
+    saveQueue();
+  }
+  flushing = false;
+  renderSync();
+  if (rejected) refresh();
+}
+
+var refreshing = false, refreshAgain = false, loadedOnce = false;
+async function refresh(){
+  if (!startedFor) return;
+  if (refreshing){ refreshAgain = true; return; }
+  refreshing = true;
+  try {
+    var data, seq, tries = 0;
+    do { seq = writeSeq; data = await fetchAll(); } while (seq !== writeSeq && ++tries < 3);
+    if (!startedFor) return;
+    var seen = {};
+    server.requests.forEach(function(r){ seen[r.id] = true; });
+    var fresh = data.requests.filter(function(r){ return !seen[r.id]; });
+    server = data;
+    lsSet(cKey(), {data:data, owner:true});
+    state = replay(server);
+    net = true;
+    renderAll(false);
+    if (loadedOnce && fresh.length) toast(fresh.length === 1 ? 'New pickup request from ' + fresh[0].name : fresh.length + ' new pickup requests');
+    loadedOnce = true;
+  } catch (e) {
+    net = false; renderSync();
+  } finally {
+    refreshing = false;
+    if (refreshAgain){ refreshAgain = false; refresh(); }
+  }
+}
+var liveTimer;
+function subscribe(){
+  if (channel) return;
+  channel = sb.channel('apex-live')
+    .on('postgres_changes', {event:'*', schema:'public'}, function(){ clearTimeout(liveTimer); liveTimer = setTimeout(refresh, 700); })
+    .subscribe();
+}
+
+/* ---------- totals ---------- */
+function totals(){
+  var route = routeStops();
+  var t = {n:route.length, done:0, tiresDone:0, tiresAll:0, billed:0, collected:0, owed:0, revAll:0, spaceDone:0, spaceAll:0, lbDone:0, miles:0, driven:0, recOwed:0, handCash:0, handCheck:0, handCheckN:0};
+  var legs = 0, lastIdx = -1;
+  route.forEach(function(s, i){
+    var a = amountOf(s), c = tireCount(s), sp = spaceOf(s);
+    t.tiresAll += c; t.revAll += a; t.spaceAll += sp;
+    legs += +s.leg || 0;
+    if (s.status !== 'scheduled') lastIdx = i;
+    if (s.status === 'done'){
+      t.done++; t.tiresDone += c; t.billed += a; t.spaceDone += sp; t.lbDone += weightOf(s);
+      if (s.paid) t.collected += a; else t.owed += a;
+    }
+  });
+  route.forEach(function(s, i){ if (i <= lastIdx) t.driven += +s.leg || 0; });
+  t.miles = legs + (route.length ? (+state.settings.return_miles || 0) : 0);
+  state.stops.forEach(function(s){
+    var a = stopAmount(s);
+    if (s.closeout_id && !s.paid) t.recOwed += a;
+    if (s.status === 'done' && s.paid && !s.deposited){
+      if (s.pay === 'cash') t.handCash += a;
+      else if (s.pay === 'check'){ t.handCheck += a; t.handCheckN++; }
+    }
+  });
+  return t;
+}
+
+/* ---------- hero ---------- */
+function truckSVG(t, cap){
+  var COLS = 24, ROWS = 5, N = COLS * ROWS, x0 = 28, y0 = 36, cw = 526 / COLS, ch = 120 / ROWS, r = Math.min(cw, ch) / 2 - 1.6;
+  var loaded = Math.min(N, Math.round(t.spaceDone / cap * N));
+  var planned = Math.min(N, Math.max(loaded, Math.round(t.spaceAll / cap * N)));
+  var g = '';
+  for (var k = 0; k < N; k++){
+    var col = COLS - 1 - Math.floor(k / ROWS), row = ROWS - 1 - (k % ROWS);
+    var cx = (x0 + cw * col + cw / 2).toFixed(1), cy = (y0 + ch * row + ch / 2).toFixed(1);
+    if (k < loaded) g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r.toFixed(1) + '" fill="#0B0D0F" stroke="#7B8590" stroke-width="1.5"/><circle cx="' + cx + '" cy="' + cy + '" r="3" fill="#F5B800"/>';
+    else if (k < planned) g += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r - 0.6).toFixed(1) + '" fill="none" stroke="#F5B800" stroke-width="1.5" stroke-dasharray="3 2.5"/>';
+    else g += '<circle cx="' + cx + '" cy="' + cy + '" r="1.8" fill="#56616B"/>';
+  }
+  var label = 'Cutaway of the 26 foot box truck. ' + num(t.spaceDone) + ' of ' + num(cap) + ' tire spaces loaded, ' + num(Math.max(0, t.spaceAll - t.spaceDone)) + ' more planned.';
+  return '<svg viewBox="0 0 720 222" role="img" aria-label="' + esc(label) + '">' +
+    '<line x1="0" y1="215" x2="720" y2="215" stroke="#3A424A" stroke-width="2"/>' +
+    '<rect x="8" y="20" width="566" height="152" rx="8" fill="#EDEEEE"/>' +
+    '<rect x="22" y="32" width="538" height="128" rx="4" fill="#39414A"/>' + g +
+    '<rect x="8" y="172" width="692" height="12" rx="2" fill="#171B1F"/>' +
+    '<path d="M580 64 H650 L698 112 V172 H580 Z" fill="#1F5FD1"/>' +
+    '<path d="M594 76 H644 L676 108 H594 Z" fill="#CFE0FF"/>' +
+    '<rect x="586" y="128" width="20" height="5" rx="2" fill="#F2F3F3"/>' +
+    '<circle cx="160" cy="192" r="24" fill="#0B0D0F" stroke="#7B8590" stroke-width="3"/><circle cx="160" cy="192" r="9" fill="#C6CBCE"/>' +
+    '<circle cx="640" cy="192" r="24" fill="#0B0D0F" stroke="#7B8590" stroke-width="3"/><circle cx="640" cy="192" r="9" fill="#C6CBCE"/>' +
+    '</svg>';
+}
+function renderHero(t){
+  var cap = +state.settings.capacity || 1, route = routeStops();
+  $('today-date').textContent = new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+  var h1 = $('hero-title'), nx = $('hero-next');
+  if (!t.n){
+    h1.textContent = 'No stops yet';
+    nx.textContent = 'Add a request from the inbox or one of your locations to start the route.';
+  } else if (t.done === t.n){
+    h1.textContent = 'Route complete';
+    nx.textContent = 'All ' + t.n + ' stops are picked up. Close out the day under the route to save it to your log.';
+  } else {
+    h1.textContent = t.done + ' of ' + t.n + ' stops done';
+    var nxt = null;
+    for (var i = 0; i < route.length; i++) if (route[i].status !== 'done'){ nxt = route[i]; break; }
+    nx.textContent = nxt.status === 'active' ? 'Now at ' + nxt.name + ', loading.' : 'Next: ' + nxt.name + ' at ' + fmtTime(nxt.arrival) + '.';
+  }
+  $('load-now').textContent = num(t.spaceDone);
+  $('load-cap').textContent = num(cap);
+  var note = $('load-note');
+  if (t.spaceAll > cap + 0.0001){
+    note.className = 'load-note over';
+    note.textContent = 'The full route is ' + num(t.spaceAll - cap) + ' spaces more than the truck holds. Move a stop to the next run.';
+  } else {
+    note.className = 'load-note';
+    note.textContent = t.n ? 'The full route fills ' + Math.round(t.spaceAll / cap * 100) + '% of the truck and leaves ' + num(cap - t.spaceAll) + ' spaces open.' : 'The truck is empty.';
+  }
+  $('truck-svg').innerHTML = truckSVG(t, cap);
+
+  var k = [
+    {l:'Stops done', v:t.done + ' / ' + t.n, s:(t.n - t.done) + ' to go'},
+    {l:'Tires picked up', v:num(t.tiresDone), s:'of ' + num(t.tiresAll) + ' planned'},
+    {l:'Billed so far', v:money(t.billed), s:money(t.revAll) + ' for the full route'},
+    {l:'Collected', v:money(t.collected), s:'paid at pickup'},
+    {l:'Still owed', v:money(t.owed + t.recOwed), s:t.recOwed > 0 ? money(t.recOwed) + ' from earlier days' : (t.owed > 0 ? 'on picked-up stops' : 'nothing outstanding'), warn:(t.owed + t.recOwed) > 0},
+    {l:'Route miles', v:num(t.miles), s:num(t.driven) + ' driven'}
+  ];
+  $('kpis').innerHTML = k.map(function(x){
+    return '<div class="kpi' + (x.warn ? ' warn' : '') + '"><dt>' + esc(x.l) + '</dt><dd class="v">' + esc(x.v) + '</dd><dd class="s">' + esc(x.s) + '</dd></div>';
+  }).join('');
+}
+
+/* ---------- route ---------- */
+function closeoutHTML(t){
+  if (!t.done && !undoId) return '';
+  var h = '<div class="closeout">';
+  if (t.done){
+    var left = t.n - t.done;
+    h += '<p>Close out to save ' + t.done + (t.done === 1 ? ' picked-up stop' : ' picked-up stops') + ' to your monthly log. Unpaid stops move to "Owed from earlier days"' +
+      (left ? ', and the ' + left + ' unfinished ' + (left === 1 ? 'stop stays' : 'stops stay') + ' on the route.' : '.') + '</p>' +
+      '<div class="acts"><button class="btn primary" type="button" data-act="close-day" data-arm="close">Close out today</button>';
+  } else {
+    h += '<div class="acts">';
+  }
+  if (undoId) h += '<button class="btn quiet" type="button" data-act="undo-close">Undo last close-out</button>';
+  return h + '</div></div>';
+}
+function routeMapLink(route){
+  var addrs = route.filter(function(s){ return s.status !== 'done' && s.address; }).map(function(s){ return s.address; });
+  if (!addrs.length) return '';
+  var depot = (state.settings.depot_address || '').trim(), dest, way;
+  if (depot && addrs.length <= 9){ dest = depot; way = addrs; }
+  else { addrs = addrs.slice(0, 10); dest = addrs[addrs.length - 1]; way = addrs.slice(0, -1); }
+  return '<a class="btn quiet" href="' + esc(mapsDir(dest, way)) + '" target="_blank" rel="noopener">Open route in Google Maps</a>';
+}
+function contactActs(s){
+  var h = '';
+  if (s.address) h += '<a class="btn quiet" href="' + esc(mapsDir(s.address)) + '" target="_blank" rel="noopener" aria-label="Directions to ' + esc(s.name) + '">Directions</a>';
+  if (s.phone) h += '<a class="btn quiet" href="' + esc(telHref(s.phone)) + '" aria-label="Call ' + esc(s.name) + '">Call</a>';
+  return h;
+}
+function stepper(s, t){
+  var name = esc(s.name), ty = t.label.toLowerCase();
+  return '<div class="crow"><span>' + t.label + '<small>' + money(price(t.k)) + ' each</small></span>' +
+    '<div class="stepper"><button type="button" data-act="step" data-id="' + s.id + '" data-type="' + t.k + '" data-d="-1" aria-label="Remove one ' + ty + ' tire at ' + name + '">&minus;</button>' +
+    '<output aria-live="polite">' + num(s[t.k]) + '</output>' +
+    '<button type="button" data-act="step" data-id="' + s.id + '" data-type="' + t.k + '" data-d="1" aria-label="Add one ' + ty + ' tire at ' + name + '">+</button></div></div>';
+}
+function renderRoute(t){
+  var route = routeStops(), el = $('route-list');
+  $('route-aside').textContent = t.n ? t.n + ' stops, ' + num(t.miles) + ' miles' : '';
+  if (!t.n){ el.innerHTML = '<p class="empty">No stops on the route. Add one from the new requests or from your locations.</p>' + closeoutHTML(t); return; }
+  var html = '<ol class="stops">';
+  route.forEach(function(s, i){
+    var a = amountOf(s), c = tireCount(s), nm = esc(s.name);
+    var statusLabel = s.status === 'done' ? 'Picked up' : s.status === 'active' ? 'At the stop, loading' : 'Scheduled';
+    html += '<li class="stop is-' + s.status + '"><div class="marker">' + (s.status === 'done' ? CHECK_SVG : (i + 1)) + '</div><div class="stop-body">';
+    html += '<div class="stop-head"><div><h3>' + nm + '</h3><p class="meta">' + esc(s.address || 'Address to confirm') + (s.phone ? ', ' + esc(s.phone) : '') + '</p></div><div class="amt">' + money(a) + '<small>' + num(c) + ' tires</small></div></div>';
+    html += '<div class="mix">' + mixChips(s) + '</div>';
+    if (s.notes) html += '<p class="note">' + esc(s.notes) + '</p>';
+    if (s.status === 'scheduled'){
+      html += '<div class="edit"><label>Arrival<input type="time" data-f="arrival" data-id="' + s.id + '" value="' + esc(s.arrival || '') + '"></label>' +
+        '<label>Miles from previous stop<input type="number" min="0" step="1" inputmode="decimal" data-f="leg" data-id="' + s.id + '" value="' + esc(s.leg) + '"></label></div>';
+      html += '<div class="acts"><button class="btn primary" type="button" data-act="start" data-id="' + s.id + '" aria-label="Start stop at ' + nm + '">Start stop</button>' + contactActs(s) +
+        '<button class="btn quiet" type="button" data-act="remove" data-id="' + s.id + '" aria-label="Remove ' + nm + ' from the route">Remove</button></div>';
+    } else {
+      html += '<div class="stop-line"><span class="status s-' + s.status + '">' + statusLabel + '</span><span>' + fmtTime(s.arrival) + '</span><span>' + num(s.leg) + ' mi from previous stop</span></div>';
+    }
+    if (s.status === 'active'){
+      html += '<div class="counts">' + TYPES.map(function(ty){ return stepper(s, ty); }).join('') + '</div>';
+      html += '<div class="acts"><button class="btn primary" type="button" data-act="confirm" data-id="' + s.id + '" aria-label="Confirm pickup at ' + nm + '">Confirm pickup</button>' +
+        '<button class="btn quiet" type="button" data-act="unstart" data-id="' + s.id + '">Back to scheduled</button>' + contactActs(s) + '</div>';
+    }
+    if (s.status === 'done'){
+      html += '<div class="payrow"><label>Pays by<select data-f="pay" data-id="' + s.id + '" aria-label="Payment method for ' + nm + '">' +
+        METHODS.map(function(m){ return '<option value="' + m.k + '"' + (m.k === s.pay ? ' selected' : '') + '>' + m.label + '</option>'; }).join('') + '</select></label>' +
+        '<span class="paystate ' + (s.paid ? 'is-paid' : 'is-owed') + '">' + (s.paid ? 'Paid ' + money(a) : 'Owed ' + money(a)) + '</span>' +
+        '<button class="btn ' + (s.paid ? 'quiet' : 'primary') + '" type="button" data-act="paid" data-id="' + s.id + '" aria-label="' + (s.paid ? 'Undo payment for ' : 'Mark paid for ') + nm + '">' + (s.paid ? 'Undo payment' : 'Mark paid') + '</button>' +
+        '<button class="btn quiet" type="button" data-act="reopen" data-id="' + s.id + '" aria-label="Edit the count at ' + nm + '">Edit count</button></div>';
+    }
+    html += '</div></li>';
+  });
+  var map = routeMapLink(route);
+  html += '</ol><p class="ret">After the last stop: ' + num(state.settings.return_miles || 0) + ' miles back to the yard.</p>' +
+    (map ? '<div class="acts">' + map + '</div>' : '') + closeoutHTML(t);
+  el.innerHTML = html;
+}
+
+/* ---------- payments ---------- */
+function renderPay(t){
+  var by = {}, route = routeStops();
+  METHODS.forEach(function(m){ by[m.k] = {col:0, owed:0, up:0, n:0}; });
+  route.forEach(function(s){
+    var a = amountOf(s), b = by[s.pay] || by.card;
+    b.n++;
+    if (s.status === 'done'){ if (s.paid) b.col += a; else b.owed += a; } else b.up += a;
+  });
+  var max = 1;
+  METHODS.forEach(function(m){ var b = by[m.k]; max = Math.max(max, b.col + b.owed + b.up); });
+  $('pay-aside').textContent = t.n ? money(t.collected) + ' of ' + money(t.revAll) + ' collected today' : '';
+  var html = '';
+  if (t.n){
+    html += '<ul class="mlist">';
+    METHODS.forEach(function(m){
+      var b = by[m.k];
+      html += '<li><div class="mname">' + ICON[m.k] + '<span>' + m.label + '</span><small>' + b.n + (b.n === 1 ? ' stop' : ' stops') + '</small></div>' +
+        '<div class="mbar" role="img" aria-label="' + m.label + ': ' + money(b.col) + ' collected, ' + money(b.owed) + ' owed, ' + money(b.up) + ' still to pick up"><i class="c" style="width:' + (b.col / max * 100) + '%"></i><i class="o" style="width:' + (b.owed / max * 100) + '%"></i><i class="u" style="width:' + (b.up / max * 100) + '%"></i></div>' +
+        '<div class="mfig"><span><i class="dot" style="background:var(--green)"></i><b>' + money(b.col) + '</b> collected</span><span><i class="dot" style="background:var(--red)"></i><b>' + money(b.owed) + '</b> owed</span><span><i class="dot" style="border:1.5px dashed var(--ink-2)"></i><b>' + money(b.up) + '</b> upcoming</span></div></li>';
+    });
+    html += '</ul>';
+  } else {
+    html += '<p class="empty">Payments by method show up once stops are on the route.</p>';
+  }
+  var onHand = t.handCash > 0 || t.handCheckN > 0;
+  if (t.n || onHand){
+    html += '<div class="hand"><div><span>Cash on hand</span><b>' + money(t.handCash) + '</b></div><div><span>Checks to deposit</span><b>' + t.handCheckN + (t.handCheckN === 1 ? ' check, ' : ' checks, ') + money(t.handCheck) + '</b></div>';
+    if (onHand) html += '<button class="btn quiet" type="button" data-act="deposit-all">Mark all deposited</button>';
+    html += '</div>';
+  }
+  var rec = receivables();
+  if (rec.length){
+    html += '<div class="owed-early"><h3>Owed from earlier days: ' + money(t.recOwed) + '</h3><ul>';
+    rec.forEach(function(r){
+      html += '<li><div><b>' + esc(r.name) + ', ' + money(stopAmount(r)) + '</b><span class="meta">Picked up ' + esc(fmtDate(r.closed_on)) + ', pays by ' + methodLabel(r.pay).toLowerCase() + '</span></div>' +
+        '<button class="btn primary" type="button" data-act="rec-paid" data-id="' + r.id + '" aria-label="Mark ' + esc(r.name) + ' paid">Mark paid</button></li>';
+    });
+    html += '</ul></div>';
+  }
+  if (t.n){
+    var disp = Math.round(t.tiresAll * (+state.settings.cost_tire || 0)), fuel = Math.round(t.miles * (+state.settings.cost_mile || 0)), margin = Math.round(t.revAll) - disp - fuel;
+    html += '<div class="margin"><span>Projected margin for the full route</span><strong>' + money(margin) + '</strong><p>' + money(t.revAll) + ' billed, minus ' + money(disp) + ' processing and ' + money(fuel) + ' truck cost. Uses the placeholder costs in Setup.</p></div>';
+  }
+  $('pay-body').innerHTML = html;
+}
+
+/* ---------- requests ---------- */
+function renderReq(t){
+  var cap = +state.settings.capacity || 1, free = cap - t.spaceAll, list = state.requests, el = $('req-body');
+  $('req-aside').textContent = list.length ? list.length + ' waiting' : '';
+  if (!list.length){ el.innerHTML = '<p class="empty">No new requests. They appear here as soon as a customer sends the form.</p>'; return; }
+  var html = '<ul class="rlist">';
+  list.forEach(function(r){
+    var sp = spaceOf(r), fits = sp <= free + 0.0001, nm = esc(r.name);
+    var fit;
+    if (r.queued && !fits) fit = '<p class="fit bad">Saved for the next run. It is ' + num(Math.ceil(sp - free)) + ' spaces too big for today.</p>';
+    else if (fits) fit = '<p class="fit ok">Fits today and leaves ' + num(free - sp) + ' spaces open.</p>';
+    else fit = '<p class="fit bad">Too big for today by ' + num(Math.ceil(sp - free)) + ' spaces.</p>';
+    html += '<li class="req"><div class="req-top"><div><h3>' + nm + '</h3><p class="meta">' + esc(r.address || 'Address to confirm') + (r.phone ? ', <a href="' + esc(telHref(r.phone)) + '">' + esc(r.phone) + '</a>' : '') + '</p></div><span class="chip">' + ICON[r.pay] + methodLabel(r.pay) + '</span></div>' +
+      '<div class="mix">' + mixChips(r) + '</div>' +
+      (r.notes ? '<p class="note">' + esc(r.notes) + '</p>' : '') +
+      '<p class="meta" style="margin-top:8px">Sent ' + esc(ago(r.created_at)) + '. Wants pickup ' + esc(fmtDate(r.pickup_date)) + '. Estimate ' + money(amountOf(r)) + '.</p>' + fit + '<div class="acts">';
+    if (fits) html += '<button class="btn primary" type="button" data-act="req-add" data-id="' + r.id + '" aria-label="Add ' + nm + ' to today\'s route">Add to route</button>';
+    else if (!r.queued) html += '<button class="btn" type="button" data-act="req-queue" data-id="' + r.id + '" aria-label="Save ' + nm + ' for the next run">Save for next run</button>';
+    html += '<button class="btn quiet" type="button" data-act="req-decline" data-id="' + r.id + '" aria-label="Remove request from ' + nm + '">Remove</button></div></li>';
+  });
+  html += '</ul>';
+  el.innerHTML = html;
+}
+
+/* ---------- locations ---------- */
+function sortedLocations(){ return state.locations.slice().sort(function(a, b){ return a.name.localeCompare(b.name); }); }
+function renderLocs(){
+  var locs = sortedLocations(), el = $('loc-body'), route = routeStops();
+  $('loc-aside').textContent = locs.length ? locs.length + (locs.length === 1 ? ' location' : ' locations') : '';
+  if (!locs.length){ el.innerHTML = '<p class="empty">No locations yet. Add the shops you visit regularly to print a QR sign for each one.</p>'; }
+  else {
+    var html = '<ul class="llist">';
+    locs.forEach(function(l){
+      var nm = esc(l.name), onRoute = route.some(function(s){ return s.location_id === l.id && s.status !== 'done'; });
+      var who = [l.contact, l.phone].filter(Boolean).map(esc).join(', ');
+      html += '<li class="loc"><h3>' + nm + '</h3><p class="meta">' + esc(l.address) + '</p>' +
+        '<p class="meta">' + (who ? who + '. ' : '') + 'Usually pays by ' + methodLabel(l.pay).toLowerCase() + '.</p><div class="acts">' +
+        (onRoute ? '<span class="on-route">On today\'s route</span>' : '<button class="btn primary" type="button" data-act="loc-route" data-id="' + l.id + '" aria-label="Add ' + nm + ' to today\'s route">Add to route</button>') +
+        '<button class="btn quiet" type="button" data-act="loc-qr" data-id="' + l.id + '" aria-label="Show the QR sign for ' + nm + '">QR sign</button>' +
+        '<button class="btn quiet" type="button" data-act="loc-edit" data-id="' + l.id + '" aria-label="Edit ' + nm + '">Edit</button>' +
+        '<button class="btn quiet" type="button" data-act="loc-del" data-id="' + l.id + '" data-arm="locdel-' + l.id + '" aria-label="Delete ' + nm + '">Delete</button></div></li>';
+    });
+    el.innerHTML = html + '</ul>';
+  }
+  if (qrLoc && !findIn(state.locations, qrLoc)) qrLoc = '';
+  var sel = $('qr-for');
+  sel.innerHTML = '<option value="">Any customer (general sign)</option>' + locs.map(function(l){
+    return '<option value="' + l.id + '"' + (l.id === qrLoc ? ' selected' : '') + '>' + esc(l.name) + '</option>';
+  }).join('');
+}
+var locEdit = null;
+function openLocForm(id){
+  var l = id ? findIn(state.locations, id) : null;
+  locEdit = l ? l.id : '';
+  $('l-title').textContent = l ? 'Edit ' + l.name : 'New location';
+  $('l-name').value = l ? l.name : '';
+  $('l-addr').value = l ? l.address : '';
+  $('l-contact').value = l ? l.contact : '';
+  $('l-phone').value = l ? l.phone : '';
+  $('l-pay').value = l ? l.pay : 'card';
+  $('l-err').textContent = '';
+  $('loc-form').hidden = false; $('loc-new-wrap').hidden = true;
+  $('l-name').focus();
+}
+function closeLocForm(){ locEdit = null; $('loc-form').hidden = true; $('loc-new-wrap').hidden = false; }
+function saveLoc(e){
+  e.preventDefault();
+  var v = {name:$('l-name').value.trim(), address:$('l-addr').value.trim(), contact:$('l-contact').value.trim(), phone:$('l-phone').value.trim(), pay:$('l-pay').value};
+  var err = !v.name ? 'Enter the business name.' : !v.address ? 'Enter the address.' : '';
+  $('l-err').textContent = err;
+  if (err) return;
+  var editing = locEdit;
+  closeLocForm();
+  if (editing) change({t:'locations', k:'upd', id:editing, v:v});
+  else change({t:'locations', k:'ins', row:Object.assign({id:uuid(), created_at:new Date().toISOString()}, v)});
+  toast(editing ? v.name + ' updated' : v.name + ' added. Print its QR sign below.');
+}
+
+/* ---------- month and impact ---------- */
+function renderMonth(t){
+  var now = new Date(), y = now.getFullYear(), m = now.getMonth(), dim = new Date(y, m + 1, 0).getDate(), today = now.getDate();
+  var map = {}; state.days.forEach(function(h){ map[h.day] = h; });
+  var vals = [], ghostToday = 0, monthTires = 0, monthRev = 0, lbs = 0, closedDays = 0, closedTires = 0, closedMargin = 0, d;
+  for (d = 1; d <= dim; d++){
+    var e = map[iso(new Date(y, m, d))], base = e ? +e.tires : 0, isT = d === today;
+    var v = base + (isT ? t.tiresDone : 0);
+    vals.push(v);
+    if (isT) ghostToday = base + t.tiresAll;
+    monthTires += v;
+    monthRev += (e ? +e.revenue : 0) + (isT ? t.billed : 0);
+    lbs += (e ? +e.lb : 0) + (isT ? t.lbDone : 0);
+    if (e && +e.tires > 0){ closedDays++; closedTires += +e.tires; closedMargin += +e.revenue - +e.cost; }
+  }
+  var max = Math.max(500, ghostToday);
+  vals.forEach(function(v){ if (v > max) max = v; });
+  var monthName = now.toLocaleDateString('en-US', {month:'long'});
+  $('month-aside').textContent = monthName;
+  var html = '<p class="summary"><b>' + num(monthTires) + '</b> tires and <b>' + money(monthRev) + '</b> billed so far this month.</p>';
+  if (closedDays){
+    html += '<p class="summary">Closed-out days average <b>' + num(closedTires / closedDays) + '</b> tires. Estimated margin on those days: <b>' + money(closedMargin) + '</b>.</p>';
+  }
+  html += '<div class="chart" role="img" aria-label="Tires collected each day in ' + monthName + '. ' + num(monthTires) + ' so far, including ' + num(t.tiresDone) + ' from open stops today.">';
+  for (d = 1; d <= dim; d++){
+    var v2 = vals[d - 1], isToday = d === today;
+    html += '<div class="day' + (isToday ? ' now' : '') + '" title="' + monthName + ' ' + d + ': ' + num(v2) + ' tires">' +
+      (isToday && ghostToday > v2 ? '<div class="ghost" style="height:' + (ghostToday / max * 100) + '%"></div>' : '') +
+      (v2 > 0 ? '<div class="bar" style="height:' + (v2 / max * 100) + '%"></div>' : '') + '</div>';
+  }
+  html += '</div><div class="dlab" aria-hidden="true">';
+  for (d = 1; d <= dim; d++) html += '<span>' + ([1, 8, 15, 22, 29].indexOf(d) >= 0 ? d : '') + '</span>';
+  html += '</div><p class="meta" style="margin-top:10px">Yellow is today. The dashed outline is what today\'s route reaches when every stop is done.</p>';
+
+  var rows = [];
+  if (t.done > 0) rows.push({label:'Today, not closed out', stops:t.done, tires:t.tiresDone, rev:t.billed, margin:null});
+  state.days.slice(0, 7).forEach(function(e){
+    rows.push({label:new Date(e.day + 'T12:00:00').toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}), stops:+e.stops, tires:+e.tires, rev:+e.revenue, margin:+e.revenue - +e.cost});
+  });
+  if (rows.length){
+    html += '<div class="tbl-wrap"><table class="tbl"><caption>Recent days</caption><thead><tr><th scope="col">Day</th><th scope="col">Stops</th><th scope="col">Tires</th><th scope="col">Billed</th><th scope="col">Est. margin</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      html += '<tr><td>' + esc(r.label) + '</td><td>' + num(r.stops) + '</td><td>' + num(r.tires) + '</td><td>' + money(r.rev) + '</td><td>' + (r.margin != null ? money(r.margin) : '&ndash;') + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += '<p class="meta" style="margin-top:14px">Close out a day from the route to log it here.</p>';
+  }
+  $('month-body').innerHTML = html;
+
+  $('impact-aside').textContent = monthName;
+  $('impact-body').innerHTML = '<p class="bignum">' + num(monthTires) + '</p><p>tires picked up so far this month</p>' +
+    '<p class="bignum" style="margin-top:18px">' + (lbs / 2000).toFixed(1) + '</p><p>estimated tons of rubber</p>' +
+    '<p class="meta" style="margin-top:12px">Weight is an estimate: 22 lb per car tire, 30 lb per SUV tire and 100 lb per truck tire.</p>';
+}
+function csvCell(v){
+  v = v == null ? '' : String(v);
+  if (/^[=@\t\r]/.test(v) || (/^[+\-]/.test(v) && !/^[+\-]?[\d\s().\-]+$/.test(v))) v = "'" + v;
+  return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+async function exportCsv(btn){
+  btn.disabled = true;
+  var r = await sb.from('stops').select('closed_on,name,address,phone,car,suv,truck,amount,pay,paid,paid_at,deposited,notes')
+    .not('closeout_id', 'is', null).order('closed_on').order('created_at');
+  btn.disabled = false;
+  if (r.error){ toast('Could not download the log: ' + errText(r.error)); return; }
+  if (!r.data.length){ toast('Nothing is closed out yet.'); return; }
+  var rows = [['Date', 'Customer', 'Address', 'Phone', 'Car tires', 'SUV tires', 'Truck tires', 'Total tires', 'Amount', 'Pays by', 'Paid', 'Paid on', 'Deposited', 'Notes']];
+  r.data.forEach(function(s){
+    rows.push([s.closed_on, s.name, s.address, s.phone, s.car, s.suv, s.truck, tireCount(s), (+s.amount).toFixed(2), methodLabel(s.pay),
+      s.paid ? 'yes' : 'no', s.paid_at ? iso(new Date(s.paid_at)) : '', s.deposited ? 'yes' : 'no', s.notes]);
+  });
+  var csv = rows.map(function(row){ return row.map(csvCell).join(','); }).join('\r\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + csv], {type:'text/csv'}));
+  a.download = 'apex-pickups-' + isoPlus(0) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+}
+
+/* ---------- QR sign + form preview ---------- */
+function autoFormUrl(){ return /^https?:$/.test(location.protocol) ? new URL('request.html', location.href).href : ''; }
+function formUrl(base){
+  var u = base != null ? base : (state.settings.form_url || '').trim();
+  u = u || autoFormUrl();
+  if (u && qrLoc) u += (u.indexOf('?') >= 0 ? '&' : '?') + 'loc=' + qrLoc;
+  return u;
+}
+var lastQr = null;
+function renderQR(base){
+  var box = $('qr'), url = formUrl(base), loc = qrLoc ? findIn(state.locations, qrLoc) : null;
+  $('qr-for-name').hidden = !loc;
+  $('qr-for-name').textContent = loc ? 'For ' + loc.name : '';
+  $('qr-url').textContent = url || 'No link yet';
+  var frameSrc = 'request.html?embed=1' + (qrLoc ? '&loc=' + qrLoc : '');
+  if ($('form-frame').getAttribute('src') !== frameSrc) $('form-frame').setAttribute('src', frameSrc);
+  if (url === lastQr) return;
+  lastQr = url;
+  if (!url){ box.innerHTML = '<p class="qr-msg">Put these files online (see the README), or add your form link in Setup, to make the QR code.</p>'; return; }
+  if (typeof qrcode !== 'function'){ lastQr = null; box.innerHTML = '<p class="qr-msg">The QR code tool did not load. Check your connection and reload the page.</p>'; return; }
+  try {
+    var q = qrcode(0, 'M'); q.addData(url); q.make();
+    var n = q.getModuleCount(), p = '';
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) p += 'M' + c + ' ' + r + 'h1v1h-1z';
+    var size = n + 8;
+    box.innerHTML = '<svg viewBox="-4 -4 ' + size + ' ' + size + '" role="img" aria-label="QR code that opens ' + esc(url) + '" shape-rendering="crispEdges"><rect x="-4" y="-4" width="' + size + '" height="' + size + '" fill="#fff"/><path d="' + p + '" fill="#111"/></svg>';
+  } catch (e) {
+    box.innerHTML = '<p class="qr-msg">That link is too long for a QR code. Use a shorter link.</p>';
+  }
+}
+function postFormInfo(){
+  var f = $('form-frame');
+  if (!f.contentWindow) return;
+  f.contentWindow.postMessage({type:'apex-form-info', info:{
+    prices:{car:price('car'), suv:price('suv'), truck:price('truck')}, zelle:state.settings.zelle, payee:state.settings.payee
+  }}, '*');
+}
+function printSign(){
+  document.body.classList.add('print-sign');
+  window.print();
+}
+window.addEventListener('afterprint', function(){ document.body.classList.remove('print-sign'); });
+
+/* ---------- setup ---------- */
+var SETUP = [
+  ['s-url', 'form_url'], ['s-depot', 'depot_address'], ['s-cap', 'capacity', 1], ['s-return', 'return_miles', 0],
+  ['s-pcar', 'price_car', 0], ['s-psuv', 'price_suv', 0], ['s-ptruck', 'price_truck', 0],
+  ['s-zelle', 'zelle'], ['s-payee', 'payee'], ['s-ctire', 'cost_tire', 0], ['s-cmile', 'cost_mile', 0]
+];
+function fillSetup(){
+  var s = state.settings;
+  SETUP.forEach(function(f){ $(f[0]).value = s[f[1]] == null ? '' : s[f[1]]; });
+  var auto = autoFormUrl();
+  $('s-url-note').textContent = auto
+    ? 'Leave blank to use this site\'s request page: ' + auto
+    : 'Once these files are online, leave this blank to use the request page next to the dashboard, or enter your own link. Location signs add ?loc= to the end of it.';
+  $('acct-email').textContent = me ? me.email : '';
+}
+function readSetup(){
+  var s = state.settings, v = {};
+  SETUP.forEach(function(f){
+    var raw = $(f[0]).value, val = f.length > 2 ? pos(raw, +s[f[1]], f[2]) : raw.trim();
+    if (val !== (f.length > 2 ? +s[f[1]] : s[f[1]])) v[f[1]] = val;
+  });
+  if (Object.keys(v).length) change({t:'settings', k:'upd', id:1, v:v});
+  fillSetup();
+}
+
+/* ---------- render all ---------- */
+var pendingRender = false;
+function editing(){
+  var a = document.activeElement;
+  return !!a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && $('app').contains(a);
+}
+function renderAll(force){
+  if (!startedFor) return;
+  if (!force && editing()){ pendingRender = true; renderSync(); return; }
+  pendingRender = false;
+  var t = totals();
+  renderHero(t); renderRoute(t); renderPay(t); renderReq(t); renderLocs(); renderMonth(t); renderQR(); postFormInfo();
+  if (!$('setup').contains(document.activeElement)) fillSetup();
+  reArm();
+  renderSync();
+}
+document.addEventListener('focusout', function(){
+  setTimeout(function(){ if (pendingRender && !editing()) renderAll(true); }, 0);
+});
+function renderSync(){
+  var el = $('sync'), n = queue.length, cls = '', txt = 'Synced';
+  if (!net) { cls = 'offline'; txt = n ? 'Offline, ' + n + (n === 1 ? ' change' : ' changes') + ' waiting' : 'Offline, showing your last copy'; }
+  else if (n) { cls = 'saving'; txt = 'Saving'; }
+  el.className = 'sync ' + cls;
+  el.innerHTML = '<i aria-hidden="true"></i>' + esc(txt);
+}
+
+/* ---------- two-tap confirm ---------- */
+var armed = {};
+function twoStep(key, btn){
+  if (armed[key]){ clearTimeout(armed[key]); delete armed[key]; return true; }
+  btn.setAttribute('data-label', btn.textContent);
+  btn.textContent = 'Tap again to confirm';
+  armed[key] = setTimeout(function(){
+    delete armed[key];
+    var b = document.querySelector('[data-arm="' + key + '"]');
+    if (b && b.getAttribute('data-label')) b.textContent = b.getAttribute('data-label');
+  }, 4000);
+  return false;
+}
+function disarmAll(){
+  Object.keys(armed).forEach(function(k){
+    clearTimeout(armed[k]); delete armed[k];
+    var b = document.querySelector('[data-arm="' + k + '"]');
+    if (b && b.getAttribute('data-label')) b.textContent = b.getAttribute('data-label');
+  });
+}
+function reArm(){
+  Object.keys(armed).forEach(function(k){
+    var b = document.querySelector('[data-arm="' + k + '"]');
+    if (b && b.textContent !== 'Tap again to confirm'){ b.setAttribute('data-label', b.textContent); b.textContent = 'Tap again to confirm'; }
+  });
+}
+
+/* ---------- actions ---------- */
+async function closeDay(){
+  var route = routeStops(), done = route.filter(function(s){ return s.status === 'done'; });
+  if (!done.length || busy) return;
+  if (queue.length){ toast('Some changes are still saving. Close out once they are saved.'); return; }
+  var t = totals(), miles = t.driven + (done.length === route.length ? (+state.settings.return_miles || 0) : 0);
+  busy = true;
+  var r = await sb.rpc('close_out_day', {p_day:isoPlus(0), p_miles:miles});
+  busy = false;
+  if (r.error){ toast(r.status ? 'Could not close out: ' + errText(r.error) : 'You are offline. Close out once you have signal.'); return; }
+  undoId = r.data;
+  toast(done.length + (done.length === 1 ? ' stop' : ' stops') + ' saved to your log');
+  await refresh();
+}
+async function undoClose(){
+  if (!undoId || busy) return;
+  busy = true;
+  var r = await sb.rpc('undo_closeout', {p_id:undoId});
+  busy = false;
+  if (r.error){ toast(r.status ? 'Could not undo: ' + errText(r.error) : 'You are offline. Try again once you have signal.'); return; }
+  undoId = null;
+  toast('Close-out undone');
+  await refresh();
+}
+function markReceivablePaid(id){
+  var r = findIn(state.stops, id);
+  if (!r) return;
+  change({t:'stops', k:'upd', id:id, v:{paid:true, paid_at:new Date().toISOString()}});
+  toast(r.name + ' marked paid');
+}
+function depositAll(){
+  var ops = [];
+  state.stops.forEach(function(s){
+    if (s.status === 'done' && s.paid && !s.deposited && (s.pay === 'cash' || s.pay === 'check')) ops.push({t:'stops', k:'upd', id:s.id, v:{deposited:true}});
+  });
+  if (ops.length) changeMany(ops);
+  toast('Cash and checks marked deposited');
+}
+function nextArrival(){
+  var route = routeStops(), last = route.length ? route[route.length - 1].arrival : null;
+  return addMin(last || '07:30', 75);
+}
+function addRequestToRoute(id){
+  var r = findIn(state.requests, id);
+  if (!r) return;
+  var row = newStop({location_id:r.location_id, name:r.name, address:r.address, phone:r.phone, notes:r.notes, arrival:nextArrival(),
+    car:r.car, suv:r.suv, truck:r.truck, pay:r.pay});
+  changeMany([{t:'stops', k:'ins', row:row}, {t:'requests', k:'del', id:id}]);
+  toast(r.name + ' added to the route');
+}
+function addLocationToRoute(id){
+  var l = findIn(state.locations, id);
+  if (!l) return;
+  change({t:'stops', k:'ins', row:newStop({location_id:l.id, name:l.name, address:l.address, phone:l.phone, pay:l.pay, arrival:nextArrival()})});
+  toast(l.name + ' added to the route. Count the tires at the stop.');
+}
+async function signOut(btn){
+  if (queue.length && !twoStep('signout', btn)){
+    toast(queue.length + (queue.length === 1 ? ' change has' : ' changes have') + ' not saved yet. Tap again to sign out anyway.');
+    return;
+  }
+  var key = qKey(), r = await sb.auth.signOut();
+  if (r.error){ toast('Could not sign out: ' + errText(r.error)); return; }
+  lsSet(key, null);
+}
+
+document.addEventListener('click', function(e){
+  var b = e.target.closest ? e.target.closest('[data-act]') : null;
+  if (!b || !startedFor) return;
+  var act = b.getAttribute('data-act'), id = b.getAttribute('data-id'), type = b.getAttribute('data-type'), d = +b.getAttribute('data-d') || 0;
+  var s = id ? findIn(state.stops, id) : null;
+  if (act === 'close-day'){ if (twoStep('close', b)) closeDay(); return; }
+  if (act === 'undo-close'){ undoClose(); return; }
+  if (act === 'signout'){ signOut(b); return; }
+  if (act === 'csv'){ exportCsv(b); return; }
+  if (act === 'print-sign'){ printSign(); return; }
+  if (act === 'loc-new'){ openLocForm(null); return; }
+  if (act === 'loc-edit'){ openLocForm(id); return; }
+  if (act === 'loc-cancel'){ closeLocForm(); return; }
+  if (act === 'loc-qr'){ qrLoc = id; renderLocs(); renderQR(); $('intake').scrollIntoView({behavior:'smooth', block:'start'}); return; }
+  if (act === 'loc-route'){ addLocationToRoute(id); return; }
+  if (act === 'loc-del'){
+    if (!twoStep('locdel-' + id, b)) return;
+    var l = findIn(state.locations, id);
+    if (locEdit === id) closeLocForm();
+    change({t:'locations', k:'del', id:id});
+    if (l) toast(l.name + ' deleted');
+    return;
+  }
+  if (act === 'req-add'){ addRequestToRoute(id); return; }
+  if (act === 'req-queue'){ change({t:'requests', k:'upd', id:id, v:{queued:true}}); toast('Saved for the next run'); return; }
+  if (act === 'req-decline'){ change({t:'requests', k:'del', id:id}); return; }
+  if (act === 'rec-paid'){ markReceivablePaid(id); return; }
+  if (act === 'deposit-all'){ depositAll(); return; }
+  if (!s) return;
+  if (act === 'start') change({t:'stops', k:'upd', id:id, v:{status:'active'}});
+  else if (act === 'unstart') change({t:'stops', k:'upd', id:id, v:{status:'scheduled'}});
+  else if (act === 'confirm') change({t:'stops', k:'upd', id:id, v:{status:'done'}});
+  else if (act === 'reopen') change({t:'stops', k:'upd', id:id, v:{status:'active'}});
+  else if (act === 'paid') change({t:'stops', k:'upd', id:id, v:s.paid ? {paid:false, paid_at:null, deposited:false} : {paid:true, paid_at:new Date().toISOString()}});
+  else if (act === 'step') { var v = {}; v[type] = Math.max(0, (+s[type] || 0) + d); change({t:'stops', k:'upd', id:id, v:v}); }
+  else if (act === 'remove') change({t:'stops', k:'del', id:id});
+});
+document.addEventListener('change', function(e){
+  var el = e.target, f = el.getAttribute ? el.getAttribute('data-f') : null;
+  if (!f || !startedFor) return;
+  var s = findIn(state.stops, el.getAttribute('data-id'));
+  if (!s) return;
+  if (f === 'arrival'){ if (el.value) change({t:'stops', k:'upd', id:s.id, v:{arrival:el.value}}); }
+  else if (f === 'leg') change({t:'stops', k:'upd', id:s.id, v:{leg:pos(el.value, +s.leg, 0)}});
+  else if (f === 'pay') change({t:'stops', k:'upd', id:s.id, v:{pay:el.value}});
+});
+window.addEventListener('message', function(e){
+  var f = $('form-frame');
+  if (!e.data || e.source !== f.contentWindow) return;
+  if (e.data.type === 'apex-form-ready') postFormInfo();
+  if (e.data.type === 'apex-request-sent'){ toast('Request added to your inbox'); refresh(); }
+});
+window.addEventListener('online', function(){ flush(); refresh(); });
+window.addEventListener('offline', function(){ net = false; renderSync(); });
+document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible' && startedFor){ flush(); refresh(); } });
+
+/* ---------- sign in ---------- */
+var GATE = {
+  signin:  {h:'Sign in', lead:'Sign in with the owner account to see today\'s route.', btn:'Sign in', email:true, pass:'current-password', links:['signup', 'reset']},
+  signup:  {h:'Create the owner account', lead:'The first account made here becomes the owner of this dashboard. Use the email address you log in to Supabase with, so the confirmation email can reach you.', btn:'Create account', email:true, pass:'new-password', links:['signin']},
+  reset:   {h:'Reset your password', lead:'Enter your email and we will send you a link to choose a new password.', btn:'Email me a link', email:true, pass:null, links:['signin']},
+  newpass: {h:'Choose a new password', lead:'Enter a new password for your account.', btn:'Save new password', email:false, pass:'new-password', links:[]},
+  denied:  {h:'No access', lead:'', btn:null, links:['signout']},
+  offline: {h:'Can\'t reach the server', lead:'Check your connection, then reload the page.', btn:null, links:['reload']},
+  config:  {h:'Not connected yet', lead:'Add your Supabase project URL and publishable key to config.js, then reload.', btn:null, links:[]}
+};
+var LINKS = {signin:'I already have an account', signup:'Create the owner account', reset:'Forgot password', signout:'Sign out', reload:'Reload'};
+var gateMode = 'signin', ownerClaimed = null, recovering = /type=recovery/.test(location.hash);
+function showView(v){
+  var app = v === 'app';
+  $('app').hidden = !app; $('hero-grid').hidden = !app; $('kpis').hidden = !app; $('sync').hidden = !app;
+  $('gate').hidden = v !== 'gate'; $('hero-gate').hidden = app;
+}
+function setGate(mode, ok){
+  gateMode = mode;
+  var g = GATE[mode];
+  showView('gate');
+  $('gate-h').textContent = g.h;
+  $('gate-lead').textContent = mode === 'denied' ? 'You are signed in as ' + (me ? me.email : '') + ', but this account is not the owner of this dashboard.' : g.lead;
+  $('auth-form').hidden = !g.btn;
+  $('a-email-wrap').hidden = !g.email;
+  $('a-pass-wrap').hidden = !g.pass;
+  $('a-pass-hint').hidden = g.pass !== 'new-password';
+  if (g.pass) $('a-pass').setAttribute('autocomplete', g.pass);
+  $('a-pass').value = '';
+  $('a-submit').textContent = g.btn || '';
+  $('a-submit').disabled = false;
+  $('a-err').textContent = '';
+  $('a-ok').textContent = ok || '';
+  $('gate-links').innerHTML = g.links.filter(function(k){ return !(k === 'signup' && ownerClaimed); }).map(function(k){
+    return '<button class="btn quiet" type="button" data-gate="' + k + '">' + LINKS[k] + '</button>';
+  }).join('');
+  if (mode === 'signin' && ownerClaimed === null) checkClaimed();
+}
+async function checkClaimed(){
+  var r = await sb.rpc('owner_claimed');
+  if (r.error || gateMode !== 'signin') return;
+  ownerClaimed = !!r.data;
+  if (!ownerClaimed) setGate('signup');
+  else $('gate-links').querySelectorAll('[data-gate="signup"]').forEach(function(b){ b.remove(); });
+}
+function redirectTo(){ return /^https?:$/.test(location.protocol) ? location.origin + location.pathname : undefined; }
+function authError(e, status){
+  var m = errText(e);
+  if (!status && /fetch|network/i.test(m)) return 'Could not reach the server. Check your connection.';
+  if (/invalid login/i.test(m)) return 'That email and password do not match.';
+  if (/not confirmed/i.test(m)) return 'Confirm your email first. Look for the link in your inbox.';
+  if (/not authorized/i.test(m)) return 'Supabase can only send email to addresses on your Supabase team. Use the email you log in to Supabase with.';
+  if (/rate limit/i.test(m)) return 'Too many emails sent. Wait an hour and try again.';
+  return m;
+}
+async function submitAuth(e){
+  e.preventDefault();
+  var g = GATE[gateMode], email = $('a-email').value.trim(), pass = $('a-pass').value, err = '';
+  if (g.email && !/^\S+@\S+\.\S+$/.test(email)) err = 'Enter your email address.';
+  else if (g.pass === 'new-password' && pass.length < 8) err = 'Use at least 8 characters for the password.';
+  else if (g.pass && !pass) err = 'Enter your password.';
+  $('a-err').textContent = err;
+  if (err) return;
+  var btn = $('a-submit'), label = btn.textContent, r;
+  btn.disabled = true; btn.textContent = 'One moment';
+  try {
+    if (gateMode === 'signin') r = await sb.auth.signInWithPassword({email:email, password:pass});
+    else if (gateMode === 'signup') r = await sb.auth.signUp({email:email, password:pass, options:{emailRedirectTo:redirectTo()}});
+    else if (gateMode === 'reset') r = await sb.auth.resetPasswordForEmail(email, {redirectTo:redirectTo()});
+    else r = await sb.auth.updateUser({password:pass});
+  } catch (x) { r = {error:x}; }
+  btn.disabled = false; btn.textContent = label;
+  if (r.error){ $('a-err').textContent = authError(r.error, r.error.status); return; }
+  if (gateMode === 'signup' && !(r.data && r.data.session)){
+    ownerClaimed = true;
+    setGate('signin', 'Check ' + email + ' for a confirmation link. After you confirm, sign in here.');
+    $('a-email').value = email;
+  } else if (gateMode === 'reset'){
+    setGate('signin', 'If ' + email + ' has an account, a reset link is on its way.');
+  } else if (gateMode === 'newpass'){
+    recovering = false;
+    history.replaceState(null, '', location.pathname + location.search);
+    var s = await sb.auth.getSession();
+    toast('Password saved');
+    onSession(s.data.session);
+  }
+}
+async function onSession(session){
+  if (!session){ stopApp(); me = null; setGate('signin'); return; }
+  me = session.user;
+  if (recovering){ setGate('newpass'); return; }
+  if (startedFor === me.id) return;
+  var cache = lsGet(cKey()), r;
+  try { r = await sb.rpc('is_owner'); } catch (x) { r = {error:x}; }
+  var owner = r.error ? !!(cache && cache.owner) : r.data === true;
+  if (!owner){ setGate(r.error ? 'offline' : 'denied'); return; }
+  startApp(cache);
+}
+function startApp(cache){
+  startedFor = me.id;
+  queue = (lsGet(qKey()) || []).map(function(op){ op.sending = false; return op; });
+  server = cache && cache.data ? cache.data : emptyData();
+  state = replay(server);
+  net = navigator.onLine;
+  loadedOnce = false;
+  showView('app');
+  fillSetup();
+  renderAll(true);
+  subscribe();
+  refresh();
+  flush();
+}
+function stopApp(){
+  if (!startedFor) return;
+  startedFor = null;
+  if (channel){ sb.removeChannel(channel); channel = null; }
+  clearTimeout(retryTimer); clearTimeout(liveTimer);
+  lsSet(cKey(), null);
+  queue = []; server = emptyData(); state = emptyData(); undoId = null; qrLoc = ''; lastQr = null;
+  closeLocForm();
+}
+
+/* ---------- init ---------- */
+function loadQrFallback(){
+  var sc = document.createElement('script');
+  sc.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+  sc.onload = function(){ lastQr = null; if (startedFor) renderQR(); };
+  document.head.appendChild(sc);
+}
+$('gate-date').textContent = new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+$('accept-list').innerHTML = METHODS.map(function(m){ return '<li>' + ICON[m.k] + m.label + '</li>'; }).join('');
+$('l-pay').innerHTML = METHODS.map(function(m){ return '<option value="' + m.k + '">' + m.label + '</option>'; }).join('');
+$('auth-form').addEventListener('submit', submitAuth);
+$('loc-form').addEventListener('submit', saveLoc);
+$('gate-links').addEventListener('click', function(e){
+  var b = e.target.closest('[data-gate]');
+  if (!b) return;
+  var k = b.getAttribute('data-gate');
+  if (k === 'signout') sb.auth.signOut();
+  else if (k === 'reload') location.reload();
+  else setGate(k);
+});
+$('qr-for').addEventListener('change', function(){ qrLoc = this.value; renderQR(); });
+$('form-frame').addEventListener('load', postFormInfo);
+SETUP.forEach(function(f){ $(f[0]).addEventListener('change', readSetup); });
+$('s-url').addEventListener('input', function(){ renderQR(this.value.trim()); });
+if (typeof qrcode !== 'function') loadQrFallback();
+
+if (!window.supabase || !CFG.supabaseUrl || !CFG.supabaseKey){
+  setGate(window.supabase ? 'config' : 'offline');
+} else {
+  sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+  sb.auth.onAuthStateChange(function(event, session){
+    if (event === 'PASSWORD_RECOVERY') recovering = true;
+    if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED'){ if (session) me = session.user; if (startedFor) flush(); return; }
+    setTimeout(function(){ onSession(session); }, 0);
+  });
+}
+})();
+</script>
+</body>
+</html>

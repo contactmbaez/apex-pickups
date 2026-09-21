@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Request a tire pickup · Apex Material Recovery</title>
+<meta name="description" content="Request a tire pickup from Apex Material Recovery in Miami. You pay at pickup.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  --bg:#E3E5E6; --panel:#FFFFFF; --panel-2:#F0F1F1; --ink:#1E2227; --ink-2:#4B535C; --line:#C6CBCE;
+  --blue:#1F5FD1; --on-blue:#FFFFFF; --pick:#EAF1FE; --green:#1E7F4B; --red:#B93A26; --focus:#1F5FD1;
+  --hero:#1E2227;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-embed]):not([data-theme="light"]){
+    --bg:#111417; --panel:#1B2025; --panel-2:#242B32; --ink:#ECEEEF; --ink-2:#A8B0B8; --line:#2F373E;
+    --blue:#7BA7FF; --on-blue:#0D1013; --pick:#1D2A40; --green:#5CC48A; --red:#FF8F7C; --focus:#7BA7FF;
+    --hero:#0C0F12;
+  }
+}
+:root[data-theme="dark"]:not([data-embed]){
+  --bg:#111417; --panel:#1B2025; --panel-2:#242B32; --ink:#ECEEEF; --ink-2:#A8B0B8; --line:#2F373E;
+  --blue:#7BA7FF; --on-blue:#0D1013; --pick:#1D2A40; --green:#5CC48A; --red:#FF8F7C; --focus:#7BA7FF;
+  --hero:#0C0F12;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+h1,h2{font-family:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;margin:0;line-height:1.05}
+p{margin:0}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.ico{width:18px;height:18px;flex:none}
+
+.top{background:var(--hero);color:#F2F3F3;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px}
+.brand{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:27px}
+.brand span{font:600 20px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.03em}
+main{max-width:520px;margin:0 auto;padding:18px 16px calc(40px + env(safe-area-inset-bottom,0px))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 18px}
+h1{font-size:34px;font-weight:700}
+.lead{color:var(--ink-2);font-size:15px;margin:6px 0 16px}
+.for{background:var(--panel-2);border-radius:10px;padding:10px 12px;margin:0 0 16px}
+.for b{display:block;font:600 22px/1.15 "Barlow Condensed","Arial Narrow",system-ui,sans-serif}
+.for span{color:var(--ink-2);font-size:14px}
+.warn{color:var(--red);font-size:14px;font-weight:600;margin:0 0 14px}
+
+.field{display:grid;gap:5px;margin:0 0 14px;border:0;padding:0;min-width:0}
+.field>span,.field legend{font-size:14px;font-weight:600;padding:0}
+.field small{color:var(--ink-2);font-weight:400}
+input[type=text],input[type=tel],input[type=date],textarea{color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:10px;min-height:44px;padding:0 12px;width:100%}
+textarea{padding:10px 12px;min-height:76px;resize:vertical}
+.trow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0}
+.trow span{font-size:15px;font-weight:600}
+.trow small{display:block;color:var(--ink-2);font-weight:400;font-size:13px}
+.stepper{display:inline-flex;align-items:center;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--panel);flex:none}
+.stepper button{width:44px;height:44px;border:0;background:var(--panel-2);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+.stepper input{width:58px;height:44px;border:0;border-radius:0;padding:0;text-align:center;background:var(--panel);color:var(--ink);font:700 22px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;-moz-appearance:textfield;appearance:textfield}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.paygrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.paychoice{position:relative;display:block}
+.paychoice input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.paychoice span{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;font-size:14px;font-weight:600}
+.paychoice input:checked+span{border-color:var(--blue);box-shadow:inset 0 0 0 1.5px var(--blue);background:var(--pick)}
+.paychoice input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
+.pay-note{font-size:13px;color:var(--ink-2);margin:2px 0 14px;min-height:2.6em}
+.est{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-top:1px dashed var(--line);margin-bottom:10px}
+.est strong{font:700 30px/1 "Barlow Condensed","Arial Narrow",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.form-err{color:var(--red);font-size:14px;font-weight:600;min-height:1.4em;margin-bottom:6px}
+.btn{min-height:48px;width:100%;padding:0 16px;border-radius:10px;border:1.5px solid var(--blue);background:var(--blue);color:var(--on-blue);font-weight:600;font-size:16px;cursor:pointer}
+.btn.quiet{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn:disabled{opacity:.6;cursor:default}
+.fine{font-size:12px;color:var(--ink-2);margin-top:10px;text-align:center}
+.hp{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+.sent{text-align:center;padding:10px 0}
+.sent svg{width:56px;height:56px;color:var(--green);margin-bottom:10px}
+.sent p{color:var(--ink-2);margin:8px auto 18px;max-width:34ch}
+
+[data-embed] body{background:#fff}
+[data-embed] .top{display:none}
+[data-embed] main{padding:22px 16px 20px}
+[data-embed] .card{border:0;padding:0;border-radius:0}
+[data-embed] h1{font-size:30px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 40 36" aria-hidden="true"><path d="M20 2 L38 34 H28 L20 18 L12 34 H2 Z" fill="#4C86F0"/><path d="M20 23 L25 34 H15 Z" fill="#F2F3F3"/></svg>
+    <span>Apex Material Recovery</span>
+  </div>
+</header>
+<main>
+  <div class="card" id="form-card">
+    <form id="req-form" novalidate>
+      <h1>Request a tire pickup</h1>
+      <p class="lead">Tell us how many tires and when. You pay at pickup.</p>
+      <div class="for" id="for" hidden><b id="for-name"></b><span id="for-addr"></span></div>
+      <p class="warn" id="loc-warn" hidden>This QR code is no longer active. You can still send a request below.</p>
+      <div id="who">
+        <label class="field"><span>Business or contact name</span><input id="f-name" type="text" autocomplete="organization" maxlength="120"></label>
+        <label class="field"><span>Pickup address</span><input id="f-addr" type="text" autocomplete="street-address" maxlength="240"></label>
+      </div>
+      <label class="field"><span id="f-phone-label">Phone</span><input id="f-phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="40"></label>
+      <fieldset class="field">
+        <legend>How many tires?</legend>
+        <div id="tire-rows"></div>
+      </fieldset>
+      <label class="field"><span>Preferred pickup date</span><input id="f-date" type="date"></label>
+      <label class="field"><span>Anything the driver should know? <small>(optional)</small></span><textarea id="f-notes" maxlength="500" placeholder="Where the tires are, gate codes, forklift needed"></textarea></label>
+      <fieldset class="field">
+        <legend>How will you pay?</legend>
+        <div class="paygrid" id="pay-grid"></div>
+      </fieldset>
+      <p class="pay-note" id="pay-note"></p>
+      <div class="hp" aria-hidden="true"><label>Leave this empty<input id="f-web" type="text" tabindex="-1" autocomplete="off"></label></div>
+      <div class="est"><span>Estimated total</span><strong id="f-total">$0</strong></div>
+      <p class="form-err" id="f-err" role="alert"></p>
+      <button class="btn" type="submit" id="f-submit">Request pickup</button>
+      <p class="fine">You pay at pickup. The final price uses the count at your location.</p>
+    </form>
+  </div>
+  <div class="card sent" id="sent-card" hidden>
+    <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 10.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1 tabindex="-1" id="sent-h">Request sent</h1>
+    <p id="sent-msg"></p>
+    <button class="btn quiet" type="button" id="again">Send another request</button>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(function(){
+'use strict';
+
+var params = new URLSearchParams(location.search);
+var embed = params.get('embed') === '1';
+if (embed) document.documentElement.setAttribute('data-embed', '');
+var locId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.get('loc') || '') ? params.get('loc') : null;
+
+var CFG = window.APEX_CONFIG || {};
+var sb = window.supabase && CFG.supabaseUrl && CFG.supabaseKey
+  ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey, {auth:{persistSession:false, autoRefreshToken:false, detectSessionInUrl:false, storageKey:'apex-request-form'}})
+  : null;
+
+var TYPES = [
+  {k:'car',   label:'Car',   hint:'Car and light truck'},
+  {k:'suv',   label:'SUV',   hint:'SUV and pickup'},
+  {k:'truck', label:'Truck', hint:'Semi and commercial'}
+];
+var METHODS = [
+  {k:'card',  label:'Credit card'},
+  {k:'cash',  label:'Cash'},
+  {k:'zelle', label:'Zelle'},
+  {k:'check', label:'Check'}
+];
+var ICON = {
+  card:  '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="4" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2 8h16" stroke="currentColor" stroke-width="1.6"/><path d="M5 13h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  cash:  '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="5" width="16" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="10" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+  zelle: '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5h10L5 15h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  check: '<svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><rect x="2" y="5" width="16" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 12h5M13 8.5h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'
+};
+
+function $(id){ return document.getElementById(id); }
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function iso(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function isoPlus(n){ var d = new Date(); d.setDate(d.getDate() + n); return iso(d); }
+function money(x){ x = Math.round(x * 100) / 100; return '$' + (x % 1 === 0 ? x.toLocaleString('en-US') : x.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})); }
+
+var info = {prices:{car:3, suv:4, truck:15}, zelle:'', payee:'Apex Material Recovery LLC'};
+var infoFromParent = false;   // the dashboard preview sends its own, possibly unsaved, prices
+var loc = null;
+var counts = {car:0, suv:0, truck:0};
+var pay = 'card';
+
+function total(){ return TYPES.reduce(function(a, t){ return a + counts[t.k] * (+info.prices[t.k] || 0); }, 0); }
+function payNote(k){
+  if (k === 'card') return 'Pay by credit card at pickup.';
+  if (k === 'cash') return 'Pay the driver in cash at pickup.';
+  if (k === 'zelle') return info.zelle ? 'Send payment by Zelle to ' + info.zelle + ' when the driver arrives.' : 'Pay by Zelle when the driver arrives. We will confirm the Zelle details with you.';
+  return 'Make the check payable to ' + (info.payee || 'Apex Material Recovery LLC') + ' and hand it to the driver.';
+}
+function update(){
+  TYPES.forEach(function(t){
+    var el = $('fc-' + t.k);
+    if (document.activeElement !== el) el.value = counts[t.k];
+    $('fp-' + t.k).textContent = t.hint + ', ' + money(+info.prices[t.k] || 0) + ' each';
+  });
+  $('f-total').textContent = money(total());
+  $('pay-note').textContent = payNote(pay);
+}
+function setPay(k){
+  pay = k;
+  var r = document.querySelector('#pay-grid input[value="' + k + '"]');
+  if (r) r.checked = true;
+  update();
+}
+function build(){
+  $('tire-rows').innerHTML = TYPES.map(function(t){
+    return '<div class="trow"><span>' + t.label + '<small id="fp-' + t.k + '"></small></span><div class="stepper">' +
+      '<button type="button" data-type="' + t.k + '" data-d="-1" aria-label="Fewer ' + t.label.toLowerCase() + ' tires">&minus;</button>' +
+      '<input id="fc-' + t.k + '" type="number" min="0" max="5000" step="1" inputmode="numeric" value="0" aria-label="' + t.label + ' tires">' +
+      '<button type="button" data-type="' + t.k + '" data-d="1" aria-label="More ' + t.label.toLowerCase() + ' tires">+</button></div></div>';
+  }).join('');
+  $('pay-grid').innerHTML = METHODS.map(function(m, i){
+    return '<label class="paychoice"><input type="radio" name="pay" value="' + m.k + '"' + (i === 0 ? ' checked' : '') + '><span>' + ICON[m.k] + m.label + '</span></label>';
+  }).join('');
+  $('tire-rows').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-type]');
+    if (!b) return;
+    var k = b.getAttribute('data-type');
+    counts[k] = Math.min(5000, Math.max(0, counts[k] + (+b.getAttribute('data-d'))));
+    update();
+  });
+  $('tire-rows').addEventListener('input', function(e){
+    var k = e.target.id && e.target.id.slice(3);
+    if (!(k in counts)) return;
+    var v = parseInt(e.target.value, 10);
+    counts[k] = isFinite(v) ? Math.min(5000, Math.max(0, v)) : 0;
+    update();
+  });
+  $('tire-rows').addEventListener('focusout', function(){ update(); });
+  $('pay-grid').addEventListener('change', function(e){ if (e.target.name === 'pay') setPay(e.target.value); });
+  $('f-date').min = isoPlus(0);
+  $('f-date').value = isoPlus(1);
+}
+function showLocation(){
+  $('for').hidden = !loc;
+  $('who').hidden = !!loc;
+  $('f-phone-label').innerHTML = loc ? 'Your phone <small>(optional, so the driver can reach you)</small>' : 'Phone';
+  if (loc){
+    $('for-name').textContent = 'Pickup for ' + loc.name;
+    $('for-addr').textContent = loc.address;
+  }
+}
+function reset(){
+  counts = {car:0, suv:0, truck:0};
+  $('f-name').value = ''; $('f-addr').value = ''; $('f-phone').value = ''; $('f-notes').value = ''; $('f-web').value = '';
+  $('f-date').value = isoPlus(1);
+  $('f-err').textContent = '';
+  setPay(loc && loc.pay ? loc.pay : 'card');
+}
+function showSent(phone){
+  $('form-card').hidden = true;
+  $('sent-card').hidden = false;
+  $('sent-msg').textContent = phone
+    ? 'Apex will contact you at ' + phone + ' to confirm your pickup day.'
+    : 'Apex has your request and will confirm your pickup day.';
+  $('sent-h').focus();
+  if (embed && window.parent !== window) window.parent.postMessage({type:'apex-request-sent'}, '*');
+}
+
+async function submit(e){
+  e.preventDefault();
+  var name = $('f-name').value.trim(), addr = $('f-addr').value.trim(), phone = $('f-phone').value.trim();
+  var date = $('f-date').value, err = '';
+  if (!loc && !name) err = 'Enter a business or contact name.';
+  else if (!loc && !addr) err = 'Enter the pickup address.';
+  else if (!loc && phone.replace(/\D/g, '').length < 7) err = 'Enter a phone number so we can confirm the pickup.';
+  else if (phone && phone.replace(/\D/g, '').length < 7) err = 'Check the phone number.';
+  else if (!(counts.car + counts.suv + counts.truck)) err = 'Add at least one tire.';
+  else if (date && date < isoPlus(0)) err = 'Pick today or a later date.';
+  else if (!sb) err = 'This form is not connected yet. Please call us to book a pickup.';
+  $('f-err').textContent = err;
+  if (err) return;
+  if ($('f-web').value){ showSent(phone); return; }
+
+  var btn = $('f-submit');
+  btn.disabled = true; btn.textContent = 'Sending';
+  var row = {name:loc ? loc.name : name, address:loc ? loc.address : addr, phone:phone, car:counts.car, suv:counts.suv, truck:counts.truck,
+    pickup_date:date || null, pay:pay, notes:$('f-notes').value.trim()};
+  if (loc) row.location_id = locId;
+  var r;
+  try { r = await sb.from('requests').insert(row); } catch (x) { r = {error:x, status:0}; }
+  btn.disabled = false; btn.textContent = 'Request pickup';
+  if (r.error){
+    var m = r.error.message || '';
+    $('f-err').textContent = !r.status ? 'Could not send. Check your connection and try again.'
+      : /too many/i.test(m) ? 'We are getting a lot of requests right now. Please try again in a few minutes.'
+      : /no longer exists/i.test(m) ? 'This QR code is no longer active. Please call us to book a pickup.'
+      : 'Something went wrong. Please check the form and try again.';
+    return;
+  }
+  showSent(phone);
+  reset();
+}
+
+async function loadInfo(){
+  if (!sb) return;
+  var r = await sb.rpc('public_form_info');
+  if (!r.error && r.data && !infoFromParent) { info = r.data; update(); }
+}
+async function loadLocation(){
+  if (!sb || !locId) return;
+  var r = await sb.rpc('public_location', {p_id:locId});
+  if (!r.error && r.data){ loc = r.data; showLocation(); setPay(loc.pay || 'card'); }
+  else if (!r.error){ $('loc-warn').hidden = false; }
+}
+
+build();
+showLocation();
+update();
+$('req-form').addEventListener('submit', submit);
+$('again').addEventListener('click', function(){ $('sent-card').hidden = true; $('form-card').hidden = false; $('f-err').textContent = ''; });
+window.addEventListener('message', function(e){
+  if (!embed || e.source !== window.parent || !e.data || e.data.type !== 'apex-form-info') return;
+  info = e.data.info; infoFromParent = true; update();
+});
+loadInfo();
+loadLocation();
+if (embed && window.parent !== window) window.parent.postMessage({type:'apex-form-ready'}, '*');
+})();
+</script>
+</body>
+</html>
